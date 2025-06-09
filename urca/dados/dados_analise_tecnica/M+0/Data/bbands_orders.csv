@@ -1,0 +1,4 @@
+strat_id,strat_name,dt,type,price,size,order_value,portfolio_value,commission,pnl
+0,period5_devfactor2.0,2016-01-06,buy,70.83333333333333,1410,99875.0,97233.7142857143,0.0,0.0
+0,period5_devfactor2.0,2016-09-23,sell,145.6,-1410,99875.0,205421.0,0.0,105421.0
+0,period5_devfactor2.0,2017-01-19,buy,120.80921658986172,1698,205134.0497695852,206106.45990783416,0.0,0.0

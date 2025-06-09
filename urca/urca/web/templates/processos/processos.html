@@ -1,0 +1,312 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+/* CSS personalizado para garantir o alinhamento vertical */
+.table td, .table th {
+    vertical-align: middle; /* Centraliza verticalmente o conteúdo das células */
+}
+</style>
+<div class="subheader py-2 py-lg-4 subheader-solid" id="kt_subheader">
+    <div class="container-fluid d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap">
+        <div class="d-flex align-items-center flex-grow-1" id="processosDropdown">
+            <h5 class="text-dark font-weight-bold mt-2 mb-2 mr-5">Processos Ativos</h5>
+            <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200"></div>
+            <div class="d-flex align-items-center justify-content-end flex-grow-0">
+                <button class="btn btn-primary" data-toggle="modal" data-target="#processSelectionModal">Adicionar Processo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex flex-column-fluid">
+    <div class="container mt-5">
+        <!-- Tabela de Processos Ativos -->
+        <div class="card mb-5" id="processos">
+            {% if not processos %}
+            <div class="text-center d-flex justify-content-center align-items-center" style="height: 200px;">
+                <div>
+                    <h3 class="text-muted">Não há nenhum processo ativo.</h3>
+                </div>
+            </div>
+            {% else %}
+            <h3 class="text-center p-3">Processos Ativos</h3>
+            <table class="table table-bordered text-center mb-0">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>PID</th>
+                        <th>Iniciou em</th>
+                        <th>Duração</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for processo in processos %}
+                    <tr class="align-middle"> <!-- Adicione a classe align-middle para centralizar verticalmente -->
+                        <td>{{ processo.nome }}</td>
+                        <td>{{ processo.pid_processo }}</td>
+                        <td>{{ processo.data_inicio }}</td>
+                        <td><span id="duracao-{{ processo.pid_processo }}"></span></td>
+                        <td>
+                            <button class="btn btn-danger p-2" onclick="terminarProcesso('{{ processo.pid_processo }}', '{{ processo.id_usuario }}', '{{ processo.nome }}')">Terminar</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+
+        <div class="card" id="processos-concluidos">
+            {% if not processos_completos %}
+            <div class="text-center d-flex justify-content-center align-items-center" style="height: 400px;">
+                <div>
+                    <h3 class="text-muted">Não há processos concluídos.</h3>
+                </div>
+            </div>
+            {% else %}
+            <h3 class="text-center p-3">Processos Concluídos</h3>
+            <table class="table table-bordered text-center mb-0">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Data de Início</th>
+                        <th>Data de Término</th>
+                        <th>Duração</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for processo_concluido in processos_completos %}
+                    <tr>
+                        <td>{{ processo_concluido.nome }}</td>
+                        <td>{{ processo_concluido.data_inicio }}</td>
+                        <td>{{ processo_concluido.data_fim }}</td>
+                        <td>{{ processo_concluido.duracao }}</td>
+                        <td>
+                            {% if processo_concluido.status %}
+                                <span class="badge badge-success">Concluído</span>
+                            {% else %}
+                                <span class="badge badge-danger">Encerrado Forçadamente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <!-- Paginação para Processos Concluídos -->
+            <nav aria-label="Pagination">
+                <ul class="pagination justify-content-center my-3">
+                    {% if pagina > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ pagina - 1 }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for p in range(start_page, end_page + 1) %}
+                    <li class="page-item {% if p == pagina %}active{% endif %}">
+                        <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+
+                    {% if pagina < total_paginas_completos %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ pagina + 1 }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="processSelectionModal" tabindex="-1" role="dialog" aria-labelledby="processSelectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="processSelectionModalLabel">Escolha um Processo</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="process-dropdown" class="col-form-label">Selecione o processo a ser iniciado:</label>
+                <select name="process" id="process-dropdown" class="form-control">
+                    <option value="atualizar_banco">Atualizar Banco de Dados</option>
+                    <option value="iniciar_markov">Iniciar Markov</option>
+                    <option value="iniciar_estocastico">Iniciar Estocástico</option>
+                    <option value="iniciar_analise">Iniciar Análise Técnica</option>
+                    <option value="iniciar_longo_prazo">Iniciar Longo Prazo</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="startProcess">Iniciar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Aguarde...</span>
+                </div>
+                <p id="loadingText"></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+<script src="js/waitingfor.js"></script>
+<script src="assets/js/plotly-2.32.0.min.js" charset="utf-8"></script>
+<script>
+function showLoadingModal(text) {
+    $('#loadingText').text(text);
+    $('#loadingModal').modal('show');
+}
+
+function hideLoadingModal() {
+    setTimeout(function() {
+        $('#loadingModal').modal('hide');
+    }, 500);
+}
+
+function terminarProcesso(pid, id_usuario, nome_funcao) {
+    showLoadingModal('Terminando processo...');
+    $.post("/_processos", { action: 'stop', pid_processo: pid, id_usuario: id_usuario, nome_funcao: nome_funcao})
+        .done(function(data) {
+            if (data.status == "0") {
+                alert(data.msg);
+                window.location.reload();
+            } else {
+                alert(data.msg);
+            }
+            hideLoadingModal();
+        })
+        .fail(function() {
+            hideLoadingModal();
+            alert('Erro ao terminar o processo. Tente novamente.');
+        });
+}
+
+$('#startProcess').on('click', function() {
+    let process = $('#process-dropdown option:selected').val();
+    $('#processSelectionModal').modal('hide');
+    showLoadingModal('Iniciando processo...');
+    $.post("/_processos", { action: 'start', process: process })
+        .done(function(data) {
+            console.log(data);
+            if (data.status == "0") {
+                setTimeout(function() {
+                    hideLoadingModal();
+                    window.location.reload();
+                }, 3000);
+            } else {
+                alert(data.msg);
+            }
+        })
+        .fail(function() {
+            hideLoadingModal();
+            alert('Erro ao iniciar o processo. Tente novamente.');
+        });
+});
+
+// Função para formatar o tempo decorrido em formato hh:mm:ss
+function formatarDuracao(segundos) {
+    if (segundos < 60) {
+        return `${Math.round(segundos)} segundos`;
+    } else if (segundos < 3600) {
+        let minutos = Math.floor(segundos / 60);
+        let segundosRestantes = Math.round(segundos % 60);
+        if (minutos === 1) {
+            return segundosRestantes === 0
+                ? `${minutos} minuto`
+                : `${minutos} minuto e ${segundosRestantes} segundos`;
+        }
+        return `${minutos} minutos${segundosRestantes > 0 ? ` e ${segundosRestantes} segundos` : ""}`;
+    } else if (segundos < 86400) {
+        let horas = Math.floor(segundos / 3600);
+        let minutosRestantes = Math.floor((segundos % 3600) / 60);
+        let segundosRestantes = Math.round(segundos % 60);
+        if (horas === 1) {
+            return minutosRestantes === 0 && segundosRestantes === 0
+                ? `${horas} hora`
+                : `${horas} hora${minutosRestantes > 0 ? `, ${minutosRestantes} minutos` : ""}${segundosRestantes > 0 ? ` e ${segundosRestantes} segundos` : ""}`;
+        }
+        return `${horas} horas${minutosRestantes > 0 ? `, ${minutosRestantes} minutos` : ""}${segundosRestantes > 0 ? ` e ${segundosRestantes} segundos` : ""}`;
+    } else {
+        let dias = Math.floor(segundos / 86400);
+        let horasRestantes = Math.floor((segundos % 86400) / 3600);
+        let minutosRestantes = Math.floor((segundos % 3600) / 60);
+        let segundosRestantes = Math.round(segundos % 60);
+        if (dias === 1) {
+            return horasRestantes === 0 && minutosRestantes === 0 && segundosRestantes === 0
+                ? `${dias} dia`
+                : `${dias} dia${horasRestantes > 0 ? `, ${horasRestantes} horas` : ""}${minutosRestantes > 0 ? `, ${minutosRestantes} minutos` : ""}${segundosRestantes > 0 ? ` e ${segundosRestantes} segundos` : ""}`;
+        }
+        return `${dias} dias${horasRestantes > 0 ? `, ${horasRestantes} horas` : ""}${minutosRestantes > 0 ? `, ${minutosRestantes} minutos` : ""}${segundosRestantes > 0 ? ` e ${segundosRestantes} segundos` : ""}`;
+    }
+}
+
+function atualizarDuracao() {
+    var now = new Date().getTime();
+    var dataInicio = null;
+    var diff = null;
+    var duracaoFormatada = null;
+
+    {% for processo in processos %}
+        var dataStr = '{{ processo.data_inicio }}';
+        console.log('Data original: ' + dataStr);
+
+        // Dividindo a string em data e hora
+        var [datePart, timePart] = dataStr.split(' ');
+
+        // Dividindo a parte da data em dia, mês e ano
+        var [day, month, year] = datePart.split('/');
+
+        // Dividindo a parte da hora em horas, minutos e segundos
+        var [hours, minutes, seconds] = timePart.split(':');
+
+
+        // Criando um objeto Date no formato UTC
+        dataInicio = new Date(year, month - 1, day, hours, minutes, seconds);
+
+        console.log('Data formatada: ' + dataInicio);
+        // Calculando a diferença em segundos
+        diff = (now - dataInicio.getTime()) / 1000;
+        //diff -= 2592000;
+        console.log('Diferença em segundos: ' + diff);
+
+        // Formatar a duração
+        duracaoFormatada = formatarDuracao(diff);
+        document.getElementById('duracao-{{ processo.pid_processo }}').textContent = duracaoFormatada;
+    {% endfor %}
+}
+
+
+// Atualiza a cada segundo
+setInterval(atualizarDuracao, 1000);
+
+// Chamada inicial para garantir que a duração seja atualizada imediatamente
+atualizarDuracao();
+</script>
+
+{% endblock %}

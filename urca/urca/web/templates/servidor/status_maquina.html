@@ -1,0 +1,145 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+
+<br>
+<!--begin::Entry-->
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="card-title font-weight-bold">Uso do Servidor</h3>
+                    <!-- Dropdown para selecionar o intervalo de atualização -->
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Intervalo de atualização (5s)
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="#" onclick="changeUpdateInterval(1)">1 segundo</a>
+                            <a class="dropdown-item" href="#" onclick="changeUpdateInterval(2)">2 segundos</a>
+                            <a class="dropdown-item" href="#" onclick="changeUpdateInterval(3)">3 segundos</a>
+                            <a class="dropdown-item" href="#" onclick="changeUpdateInterval(4)">4 segundos</a>
+                            <a class="dropdown-item" href="#" onclick="changeUpdateInterval(5)">5 segundos</a>
+                            <a class="dropdown-item" href="#" onclick="changeUpdateInterval(6)">6 segundos</a>
+                            <a class="dropdown-item" href="#" onclick="changeUpdateInterval(7)">7 segundos</a>
+                            <a class="dropdown-item" href="#" onclick="changeUpdateInterval(8)">8 segundos</a>
+                            <a class="dropdown-item" href="#" onclick="changeUpdateInterval(9)">9 segundos</a>
+                            <a class="dropdown-item" href="#" onclick="changeUpdateInterval(10)">10 segundos</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Server status display -->
+                    <div id="server-status">
+                        Uso de Disco: <span id="uso-disco">{{ dados.uso_disco }} / {{ dados.espaco_total_disco }}</span><br>
+                        <div class="progress">
+                            <div id="uso-disco-bar" class="progress-bar progress-bar-striped progress-bar-animated {% if dados.porcentagem_disco >= 80 %}bg-danger{% elif dados.porcentagem_disco >= 50 %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ dados.porcentagem_disco }}%;" aria-valuenow="{{ dados.porcentagem_disco }}" aria-valuemin="0" aria-valuemax="100"></div>
+
+                        </div>
+                        <br>
+                        Uso de Memória: <span id="uso-memoria">{{ dados.uso_memoria }} / {{ dados.total_memoria }}</span><br>
+                        <div class="progress">
+                            {% set porcentagem_memoria_usada = (dados.uso_memoria / dados.total_memoria) * 100 %}
+                            <div id="uso-memoria-bar" class="progress-bar progress-bar-striped progress-bar-animated {% if porcentagem_memoria_usada >= 80 %}bg-danger{% elif porcentagem_memoria_usada >= 50 %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ porcentagem_memoria_usada }}%;" aria-valuenow="{{ porcentagem_memoria_usada }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <br>
+                        Uso de CPU: <span id="uso-cpu">{{ dados.uso_cpu }}%</span>
+                        <div class="progress">
+                            <div id="uso-cpu-bar" class="progress-bar progress-bar-striped progress-bar-animated {% if dados.uso_cpu >= 80 %}bg-danger{% elif dados.uso_cpu >= 50 %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ dados.uso_cpu }}%;" aria-valuenow="{{ dados.uso_cpu }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <br>
+                        Uso de Rede (uptime): <span id="uso-rede">{{ dados.uso_rede }}</span><br>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--end::Container-->
+{% endblock %}
+
+{% block footer %}
+<script>
+
+    var intervalo;
+    function convertBytes(size, formato='KB') {
+        // Definir os possíveis formatos
+        var formatos = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+        // Iniciar com o menor formato
+        var index = 0;
+
+        // Converter bytes para o formato especificado
+        while (size > 1024 && index < formatos.length - 1) {
+            size /= 1024.0;
+            index++;
+        }
+
+        return size.toFixed(1) + ' ' + formatos[index];
+    }
+
+
+    // Função para atualizar os dados do servidor
+    function atualizarDadosServidor() {
+        fetch('_status_server', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            document.getElementById('uso-disco').innerText = data.uso_disco + ' / ' + data.espaco_total_disco;
+            document.getElementById('uso-memoria').innerText = convertBytes(data.uso_memoria) + ' / ' + convertBytes(data.total_memoria);
+            document.querySelector('#server-status #uso-rede').innerText = data.uso_rede;
+            document.querySelector('#server-status #uso-cpu').innerText = data.uso_cpu + '%';
+
+            // Calcular a porcentagem de memória usada em relação ao total
+            let porcentagem_memoria_usada = (data.uso_memoria / data.total_memoria) * 100;
+
+            let usoDiscoBar = document.getElementById('uso-disco-bar');
+            let usoMemoriaBar = document.getElementById('uso-memoria-bar');
+            let usoCpuBar = document.getElementById('uso-cpu-bar');
+            // Atualizar barras de progresso de disco, memória e CPU
+            atualizarBarraProgresso(usoDiscoBar, data.porcentagem_disco);
+            atualizarBarraProgresso(usoMemoriaBar, porcentagem_memoria_usada);
+            atualizarBarraProgresso(usoCpuBar, data.uso_cpu);
+
+            function atualizarBarraProgresso(barra, porcentagem) {
+                barra.style.width = porcentagem + '%';
+                barra.setAttribute('aria-valuenow', porcentagem);
+                barra.innerText = porcentagem.toFixed(2) + '%';
+
+                // Remover classes existentes de bg-danger, bg-warning e bg-success
+                barra.classList.remove('bg-danger', 'bg-warning', 'bg-success');
+
+                // Adicionar classe correspondente com base na porcentagem
+                if (porcentagem >= 80) {
+                    barra.classList.add('bg-danger');
+                } else if (porcentagem >= 50) {
+                    barra.classList.add('bg-warning');
+                } else {
+                    barra.classList.add('bg-success');
+                }
+            }
+        })
+        .catch(error => console.error('Erro ao obter dados do servidor:', error));
+    }
+
+    // Função para mudar o intervalo de atualização
+    function changeUpdateInterval(seconds) {
+        clearInterval(intervalo); // Limpar o intervalo atual
+        intervalo = setInterval(atualizarDadosServidor, seconds * 1000); // Configurar novo intervalo
+        // Atualizar texto do dropdown com o valor selecionado
+        document.getElementById('dropdownMenuButton').innerText = "Intervalo de atualização (" + seconds + 's)';
+    }
+
+    // Chamar a função de atualização inicialmente
+    atualizarDadosServidor();
+
+    // Configurar o intervalo de atualização inicial (5 segundos)
+    intervalo = setInterval(atualizarDadosServidor, 5000);
+</script>
+
+{% endblock %}

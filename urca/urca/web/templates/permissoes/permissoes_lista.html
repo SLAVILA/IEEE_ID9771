@@ -1,0 +1,505 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+
+
+<br>
+<!--begin::Entry-->
+<div class="d-flex flex-column-fluid">
+    <!--begin::Container-->
+    <div class="container">
+        <!--begin::Dashboard-->
+        <!--begin::Row-->
+        <div class="row">
+            <div class="col-lg-12 col-xxl-12 order-1 order-xxl-12">
+                <!--begin::Card-->
+                <div class="card card-custom">
+                    <div class="card-body">
+                        <!--begin: Search Form-->
+                        <!--begin::Search Form-->
+                        <div class="mb-7">
+                            <div class="row align-items-center">
+                                <div class="col-lg-12 col-xl-12">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-4 my-2 my-md-0">
+                                            <div class="input-icon">
+                                                <input type="text" class="form-control" placeholder="Pesquisa..."
+                                                    id="kt_datatable_permissoes_search_query" />
+                                                <span>
+                                                    <i class="flaticon2-search-1 text-muted"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2 my-2 my-md-0">
+                                            <div class="d-flex align-items-center">
+                                                <label class="mr-3 mb-0 d-none d-md-block">Filtro:</label>
+                                                <select class="form-control" id="kt_datatable_permissoes_search_status">
+                                                    <option value="0">Todas</option>
+                                                    <option value="1">Ativos</option>
+                                                    <option value="2">Inativos</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-2 my-2 my-md-0">
+                                            <div class="d-flex align-items-center">
+                                                <label class="mr-3 mb-0 d-none d-md-block">Templates:</label>
+                                                <select class="form-control" id="kt_datatable_permissoes_template_status">
+                                                    {% if 'lista_templates' in session.keys() %}
+                                                    {% if 'not' in session['lista_templates'] %}
+                                                    <option value="0" selected>NÃO</option>
+                                                    <option value="1">SIM</option>
+                                                    {% else %}
+                                                    <option value="0">NÃO</option>
+                                                    <option value="1" selected>SIM</option>
+                                                    {% endif %}
+                                                    {% else %}
+                                                    <option value="0">NÃO</option>
+                                                    <option value="1">SIM</option>
+                                                    {% endif %}
+                                                    
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Search Form-->
+                        <!--end: Search Form-->
+                        <div class="mt-10 mb-5 collapse" id="kt_datatable_group_action_form_2">
+                            <div class="d-flex align-items-center">
+                                <div class="font-weight-bold text-danger mr-3">Selecionados
+                                <span id="kt_datatable_selected_records_2">0</span> itens:</div>
+                                {% if menu[8][3] %}
+                                    <button class="btn btn-sm btn-danger mr-2" type="button" onclick="exclui_select()" id="kt_datatable_delete_all_2">Excluir Todos</button>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!--begin: Datatable-->
+                        <div class="datatable datatable-bordered datatable-head-custom" id="kt_datatable_permissoes"></div>
+                        <!--end: Datatable-->
+                    </div>
+                </div>
+                <!--end::Card-->
+            </div>
+        </div>
+        <!--end::Row-->
+        <!--end::Dashboard-->
+    </div>
+    <!--end::Container-->
+</div>
+<!--end::Entry-->
+
+{% endblock %}
+
+{% block footer %}
+
+<script>var KTAppSettings = { "breakpoints": { "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400 }, "colors": { "theme": { "base": { "white": "#ffffff", "primary": "#3699FF", "secondary": "#E5EAEE", "success": "#1BC5BD", "info": "#8950FC", "warning": "#FFA800", "danger": "#F64E60", "light": "#E4E6EF", "dark": "#181C32" }, "light": { "white": "#ffffff", "primary": "#E1F0FF", "secondary": "#EBEDF3", "success": "#C9F7F5", "info": "#EEE5FF", "warning": "#FFF4DE", "danger": "#FFE2E5", "light": "#F3F6F9", "dark": "#D6D6E0" }, "inverse": { "white": "#ffffff", "primary": "#ffffff", "secondary": "#3F4254", "success": "#ffffff", "info": "#ffffff", "warning": "#ffffff", "danger": "#ffffff", "light": "#464E5F", "dark": "#ffffff" } }, "gray": { "gray-100": "#F3F6F9", "gray-200": "#EBEDF3", "gray-300": "#E4E6EF", "gray-400": "#D1D3E0", "gray-500": "#B5B5C3", "gray-600": "#7E8299", "gray-700": "#5E6278", "gray-800": "#3F4254", "gray-900": "#181C32" } }, "font-family": "Poppins" };</script>
+<script>
+
+    "use strict";
+    // Class definition
+
+    var KTDatatableRemoteAjaxDemo = function () {
+        // Private functions
+
+        // basic demo
+        var demo = function () {
+
+            var datatable = $('#kt_datatable_permissoes').KTDatatable({
+                // datasource definition
+                data: {
+                    type: 'remote',
+                    source: {
+                        read: {
+                            url: '/_permissoes_lista',
+                            // sample custom headers
+                            // headers: {'x-my-custom-header': 'some value', 'x-test-header': 'the value'},
+                            map: function (raw) {
+                                // sample data mapping
+                                var dataSet = raw;
+                                if (typeof raw.data !== 'undefined') {
+                                    dataSet = raw.data;
+
+                                    if (raw.aviso) {
+                                        toastr.options = {
+                                            "closeButton": false,
+                                            "debug": false,
+                                            "newestOnTop": false,
+                                            "progressBar": false,
+                                            "positionClass": "toast-top-right",
+                                            "preventDuplicates": false,
+                                            "onclick": null,
+                                            "showDuration": "300",
+                                            "hideDuration": "1000",
+                                            "timeOut": "5000",
+                                            "extendedTimeOut": "1000",
+                                            "showEasing": "swing",
+                                            "hideEasing": "linear",
+                                            "showMethod": "fadeIn",
+                                            "hideMethod": "fadeOut"
+                                        };
+                                        toastr.error(raw.aviso.texto);
+                                    };
+                                }
+                                return dataSet;
+                            },
+                        },
+                    },
+                    pageSize: 10,
+                    serverPaging: true,
+                    serverFiltering: true,
+                    serverSorting: true,
+                },
+
+                // layout definition
+                layout: {
+                    scroll: false,
+                    footer: false,
+                },
+
+                // column sorting
+                sortable: true,
+
+                pagination: true,
+
+                search: {
+                    input: $('#kt_datatable_permissoes_search_query'),
+                    key: 'generalSearch'
+                },
+
+                // columns definition
+                columns: [
+                {
+                    field: 'id2',
+                    title: '#',
+                    //sortable: 'asc',
+                    width:  20,
+                    type: 'number',
+                    //selector: false,
+                    selector: {
+                        class: ''
+                    },
+                    textAlign: 'center',
+                }, 
+                {
+                    field: 'id',
+                    title: 'ID',
+                    sortable: 'asc',
+                    width:  50,
+                    type: 'number',
+                    selector: false,
+                    textAlign: 'center',
+                }, 
+                {
+                    field: 'str_nome',
+                    title: 'Nome',
+                    width: 250,
+                    overflow: 'visible',
+                    autoHide: false,
+
+                }, 
+                {
+                    field: 'bol_status',
+                    title: 'Status',
+                    width: 80,
+                    overflow: 'visible',
+                    template: function (row) {
+
+                        if (row.bol_status)
+                            return '<span class="label font-weight-bold label-lg  label-light-success anim label-inline">Ativo</span>';
+
+                        return '<span class="label font-weight-bold label-lg  label-light-danger label-inline">Inativo</span>'
+
+                    }
+                },
+                 {
+                    field: 'Actions',
+                    title: 'Ações',
+                    sortable: false,
+                    width: 125,
+                    overflow: 'visible',
+                    autoHide: false,
+                    template: function (row) {
+                        return '\<a href="javascript:;" onclick="edita_permissao(' + row.id + ')" class="btn btn-sm btn-clean btn-icon mr-2" title="Edit details">\
+                            <i class="flaticon-edit icon-md" style="color:#25a9f6;"></i>\
+                        </a>\
+                        <a href="javascript:;" onclick="exclui_permissao(' + row.id + ', \'' + row.str_nome + '\')" class="btn btn-sm btn-clean btn-icon" title="Delete">\
+                            <i class="flaticon-delete icon-md" style="color:#f05050;"></i>\
+                        </a>\
+                    ';
+                    },
+                }],
+
+            });
+
+            $(document).on('change', '#kt_datatable_permissoes [type="checkbox"]', function() {
+                var selectedRows = datatable.getSelectedRecords().length;
+
+                $('#kt_datatable_selected_records_2').html(selectedRows);
+                if (selectedRows > 0) {
+                    console.log('At least one row selected. Showing div.');
+                    $('#kt_datatable_group_action_form_2').collapse('show');
+                } else {
+                    console.log('No rows selected. Hiding div.');
+                    $('#kt_datatable_group_action_form_2').collapse('hide');
+                }
+            });
+
+            $('#kt_datatable_permissoes_search_status').on('change', function() {
+                datatable.search($(this).val().toLowerCase(), 'Status');
+            });
+            $('#kt_datatable_permissoes_template_status').on('change', function() {
+                datatable.search($(this).val().toLowerCase(), 'Templates');
+            });
+
+            $('#kt_datatable_permissoes_search_status').selectpicker();
+
+        };
+
+        return {
+            // public functions
+            init: function () {
+                demo();
+            },
+        };
+    }();
+
+    jQuery(document).ready(function () {
+        // localStorage.clear();
+        KTDatatableRemoteAjaxDemo.init();
+    });
+
+    function edita_permissao(id) {
+        $.post("/_permissoes_verifica", { id: id })
+            .done(function (data) {
+                var res = JSON.parse(data);
+                if (res.status == '1') {
+                    texto = document.getElementById("texto_modal");
+                    texto.innerHTML = res.msg;
+                    $('#msgModal').modal('show')
+                } else {
+                    window.location.href = "/permissoes_edicao";
+                }
+            });
+    };
+
+    function exclui_select(){
+        var ids='';
+        var selected = document.querySelectorAll('*[type^="checkbox"]');
+        for (var checkbox of selected)
+        {
+            if (checkbox.checked) {
+                ids=ids+'#'+checkbox.value;
+            }
+        }
+
+        if (ids != '') {
+            Swal.fire({
+            title: "Confirmação",
+            text: "Confirma exclusão das permissões selecionadas?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "SIM",
+            cancelButtonText: "Não",
+            reverseButtons: true
+        }).then(function(result) {
+            if (result.value) {
+                $.post( "/_permissoes_exclui_select", {ids: ids} )
+                .done(function(data){
+                    var res = JSON.parse(data);
+                    if (res.status == '1') {
+                        var msg = res.msg;
+                        Swal.fire({
+                            html: msg,
+                            icon: "error",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok!",
+                            customClass: {
+                                confirmButton: "btn font-weight-bold btn-light-primary"
+                            }
+                        }).then(function () {
+
+                            KTUtil.scrollTop();
+                            window.location.href = "/permissoes_lista";
+
+                        });
+                    } else {
+                        var msg = res.msg;
+                        Swal.fire({
+                            html: msg,
+                            icon: msg.includes("Houve erros") ? "warning" : "success",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok!",
+                            customClass: {
+                                confirmButton: "btn font-weight-bold btn-light-primary"
+                            }
+                        }).then(function () {
+
+                            KTUtil.scrollTop();
+                            window.location.href = "/permissoes_lista";
+
+                        });
+                    }
+                });
+            }
+        });
+        } else {
+            Swal.fire({
+                text: "Selecione pelo menos uma permissão para ser excluída.",
+                icon: "error",
+                buttonsStyling: false,
+                confirmButtonText: "Ok!",
+                customClass: {
+                    confirmButton: "btn font-weight-bold btn-light-primary"
+                }
+            }).then(function () {
+                KTUtil.scrollTop();
+                //window.location.href = "/permissoes_lista";
+            });
+        }
+    }
+
+
+    function exclui_permissao(id, nome) {
+        $.post("/_permissoes_verifica_exc", { id: id })
+            .done(function (data) {
+                var res = JSON.parse(data);
+                // alert(res.msg);
+                if (res.status == '1') {
+
+                    Swal.fire({
+                        text: res.msg,
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok!",
+                        customClass: {
+                            confirmButton: "btn font-weight-bold btn-light-primary"
+                        }
+                    }).then(function () {
+
+                        KTUtil.scrollTop();
+                        window.location.href = "/permissoes_lista";
+
+                    });
+
+                } else {
+                    var token = res.token;
+
+                    Swal.fire({
+                        text: "Você deseja realmente excluir a permissão " + nome + " ?  ",
+                        icon: "warning",
+                        buttonsStyling: false,
+                        confirmButtonText: "Sim!",
+                        cancelButtonText: "Cancelar!",
+                        showCancelButton: true,
+                        customClass: {
+                            confirmButton: "btn font-weight-bold btn-light-primary",
+                            cancelButton: "btn font-weight-bold btn-light-danger"
+                        }
+                    }).then(function (result) {
+
+                        if (result.isConfirmed) {
+                            $.post("/_permissoes_exclui", { token: token })
+                                .done(function (data) {
+                                    var res = JSON.parse(data);
+                                    // alert(res.msg);
+                                    if (res.status == '1') {
+                                        msg = res.msg;
+                                        Swal.fire({
+                                            html: msg,
+                                            icon: "error",
+                                            buttonsStyling: false,
+                                            confirmButtonText: "Ok!",
+                                            customClass: {
+                                                confirmButton: "btn font-weight-bold btn-light-primary"
+                                            }
+                                        }).then(function () {
+
+                                            KTUtil.scrollTop();
+                                            window.location.href = "/permissoes_lista";
+
+                                        });
+
+                                    } else {
+
+                                        Swal.fire({
+                                            text: "Permissão excluída com sucesso!",
+                                            icon: "success",
+                                            buttonsStyling: false,
+                                            confirmButtonText: "Ok!",
+                                            customClass: {
+                                                confirmButton: "btn font-weight-bold btn-light-primary"
+                                            }
+                                        }).then(function () {
+
+                                            KTUtil.scrollTop();
+                                            window.location.href = "/permissoes_lista";
+
+                                        });
+
+                                    }
+                                    // window.location.href = "/abre_relat";
+                                    //window.location.href="/login" ;
+                                });
+                        } else {
+                            window.location.href = "/permissoes_lista";
+                        }
+
+                    });
+
+                }
+                // window.location.href = "/abre_relat";
+                //window.location.href="/login" ;
+            });
+    };
+
+    function novo_permissao() {
+        window.location.href = "/permissoes_novo";
+    }
+
+    
+/**
+    {% if not msg == '' %}
+    var msg = '{{ msg }}';
+
+    Swal.fire({
+        html: msg,
+        icon: "info",
+        buttonsStyling: false,
+        confirmButtonText: "Ok!",
+        customClass: {
+            confirmButton: "btn font-weight-bold btn-light-primary"
+        }
+    }).then(function () {
+
+        KTUtil.scrollTop();
+        // window.location.href = "/lista_usuarios";
+
+    });
+
+    {% endif %}
+    **/
+
+var newItem = `
+<div class="d-flex align-items-center flex-wrap mr-2">
+            <!--begin::Page Title-->
+            <h5 class="text-dark font-weight-bold mt-2 mb-2 mr-5">Permissões</h5>
+            <!--end::Page Title-->
+            <!--begin::Actions-->
+            <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200"></div>
+            
+            {% if menu[8][1] %}
+                <a href="#" onclick="novo_permissao()" class="btn btn-primary font-weight-bolder btn-sm" style="font-size: 0.8rem">Adicionar Nova Permissão</a>&nbsp
+            {% endif %}
+        </div>
+`;
+
+addItemsToTopbar(newItem);
+
+
+</script>
+{% endblock %}

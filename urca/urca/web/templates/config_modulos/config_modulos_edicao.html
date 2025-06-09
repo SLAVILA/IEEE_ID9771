@@ -1,0 +1,199 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+<br>
+<!--begin::Entry-->
+<div class="d-flex flex-column-fluid">
+    <!--begin::Container-->
+    <div class="container">
+        <!--begin::Dashboard-->
+        <!--begin::Row-->
+        <div class="row">
+            <div class="col-lg-12 col-xxl-12 order-1 order-xxl-12">
+                <!--begin::List Widget 8-->
+                <div class="card card-custom card-stretch gutter-b">
+                    <!--begin::Header-->
+                    <div class="card-header border-0">
+                        <h3 class="card-title font-weight-bolder text-dark">
+                            {% if novo == 1 %}
+                            Novo Módulo
+                            {% else %}
+                            Editar Módulo
+                            {% endif %}
+                        </h3>
+                    </div>
+                    <!--end::Header-->
+
+                    <form action="" id="kt_incluir_cliente_form">
+                        <!--begin::Body-->
+                        <div class="card-body pt-0">
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nome <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="str_nome_modulo" id="str_nome_modulo"
+                                            value="{{ modulo['str_nome_modulo'] }}" placeholder="Nome" />
+
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Descrição <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="str_descr_modulo" id="str_descr_modulo"
+                                            value="{{ modulo['str_descr_modulo'] }}" placeholder="Descrição" />
+
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label>É CRUD ?</label>
+                                    <span
+                                    class="switch switch-outline switch-icon switch-success">
+                                    <label>
+                                        <input type="checkbox" id="check_crud"
+                                            {% if modulo['bol_crud'] %}
+                                            checked="checked" 
+                                            {% endif %}
+                                            onclick="alt_perm(!{{modulo['bol_crud'] | lower }}, {{ modulo['id'] }}, {{ edita_config_modulo }})" />
+                                        <span></span>
+                                        
+                                    </label>
+                                </span>
+                                </div>
+                                
+                                
+                            </div>
+
+                        </div>
+                        <div class="card-footer">
+                            {% if novo == 1 %}
+                            <button type="button" class="btn btn-primary mr-2" onclick="incluir()">Incluir</button>
+                            {% else %}
+                            <button type="button" class="btn btn-primary mr-2" onclick="alterar()">Alterar</button>
+                            {% endif %}
+                            <button type="button" onclick="voltar()" class="btn btn-secondary">Voltar</button>
+                        </div>
+                </div>
+                <!--end::Body-->
+
+
+                </form>
+            </div>
+            <!--end: Card-->
+            <!--end::List Widget 8-->
+        </div>
+    </div>
+    <!--end::Row-->
+    <!--end::Dashboard-->
+</div>
+<!--end::Container-->
+
+{% endblock %}
+
+{% block footer %}
+<script>var KTAppSettings = { "breakpoints": { "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400 }, "colors": { "theme": { "base": { "white": "#ffffff", "primary": "#3699FF", "secondary": "#E5EAEE", "success": "#1BC5BD", "info": "#8950FC", "warning": "#FFA800", "danger": "#F64E60", "light": "#E4E6EF", "dark": "#181C32" }, "light": { "white": "#ffffff", "primary": "#E1F0FF", "secondary": "#EBEDF3", "success": "#C9F7F5", "info": "#EEE5FF", "warning": "#FFF4DE", "danger": "#FFE2E5", "light": "#F3F6F9", "dark": "#D6D6E0" }, "inverse": { "white": "#ffffff", "primary": "#ffffff", "secondary": "#3F4254", "success": "#ffffff", "info": "#ffffff", "warning": "#ffffff", "danger": "#ffffff", "light": "#464E5F", "dark": "#ffffff" } }, "gray": { "gray-100": "#F3F6F9", "gray-200": "#EBEDF3", "gray-300": "#E4E6EF", "gray-400": "#D1D3E0", "gray-500": "#B5B5C3", "gray-600": "#7E8299", "gray-700": "#5E6278", "gray-800": "#3F4254", "gray-900": "#181C32" } }, "font-family": "Poppins" };</script>
+
+<script>
+    var crud_atual = {{modulo['bol_crud'] | lower }};
+
+    function alt_perm(tipo, mod, grupo) {
+        crud_atual = !crud_atual;
+        $.post("/_permissoes_altera_une_grupo_permissao", { tipo: crud_atual, mod: mod, grupo: grupo })
+            .done(function (data) {
+                var res = JSON.parse(data);
+                // alert(res.msg);
+                if (res.status == '1') {
+
+                    Swal.fire({
+                        text: res.msg,
+                        icon: "info",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok!",
+                        customClass: {
+                            confirmButton: "btn font-weight-bold btn-light-primary"
+                        }
+                    }).then(function () {
+
+                        KTUtil.scrollTop();
+
+                    });
+
+                } else {
+
+                    toastr.options = {
+                        "closeButton": false,
+                        "debug": false,
+                        "newestOnTop": false,
+                        "progressBar": false,
+                        "positionClass": "toast-top-right",
+                        "preventDuplicates": false,
+                        "onclick": null,
+                        "showDuration": "300",
+                        "hideDuration": "1000",
+                        "timeOut": "5000",
+                        "extendedTimeOut": "1000",
+                        "showEasing": "swing",
+                        "hideEasing": "linear",
+                        "showMethod": "fadeIn",
+                        "hideMethod": "fadeOut"
+                    };
+
+                    texto = "Módulo agora é CRUD.";    
+
+                    if (!crud_atual) {
+                        texto = "Módulo não é mais CRUD.";
+                        
+                    };
+
+                    toastr.success(texto);
+
+                }
+                // window.location.href = "/abre_relat";
+                //window.location.href="/login" ;
+            });
+    };
+
+    function incluir() {
+        var str_nome_modulo = document.getElementById('str_nome_modulo').value;
+        var str_descr_modulo = document.getElementById('str_descr_modulo').value;
+        
+        $.post("/_config_modulos_novo", {
+            str_nome_modulo: str_nome_modulo,
+            str_descr_modulo: str_descr_modulo
+        })
+            .done(function (data) {
+                var res = JSON.parse(data);
+                if (res.status == '1') {
+                    notify(res.msg, res.msg_type);
+                } else {
+                    window.location.href = "/config_modulos_lista";
+                }
+            });
+    };
+
+    function alterar() {
+        var str_nome_modulo = document.getElementById('str_nome_modulo').value;
+        var str_descr_modulo = document.getElementById('str_descr_modulo').value;
+        
+        $.post("/_config_modulos_edicao", {
+            str_nome_modulo: str_nome_modulo,
+            str_descr_modulo: str_descr_modulo
+        })
+            .done(function (data) {
+                var res = JSON.parse(data);
+                if (res.status == '1') {
+                    notify(res.msg, res.msg_type);
+                } else {
+                    window.location.href = "/config_modulos_lista";
+                }
+            });
+    };
+
+    function voltar() {
+        window.location.href = "/config_modulos_lista";
+    };
+</script>
+
+{% endblock %}

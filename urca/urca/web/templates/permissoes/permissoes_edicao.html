@@ -1,0 +1,494 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+<br>
+<!--begin::Entry-->
+<div class="d-flex flex-column-fluid">
+    <!--begin::Container-->
+    <div class="container">
+        <!--begin::Dashboard-->
+        <!--begin::Row-->
+        <div class="row">
+            <div class="col-lg-12 col-xxl-12 order-1 order-xxl-12">
+                <!--begin::List Widget 8-->
+                <div class="card card-custom card-stretch gutter-b">
+                    <!--begin::Header-->
+                    <div class="card-header border-0">
+                        <h3 class="card-title font-weight-bolder text-dark">
+                            {% if novo == 1 %}
+                            Nova Permissão
+                            {% else %}
+                            Edição de Permissão
+                            {% endif %}
+                        </h3>
+                    </div>
+                    <!--end::Header-->
+
+                    <form action="" id="kt_incluir_permissao_form">
+                        <!--begin::Body-->
+                        <div class="card-body pt-0">
+
+                            <div class="row">
+                                <div class="col-md-10">
+                                    <div class="form-group">
+                                        <label>Nome <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name='str_nome' id='str_nome'
+                                            value='{{ edita_grupo["str_nome"] }}' placeholder="Nome" />
+
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <div class="form-group">
+                                        <label>Cliente: <span class="text-danger">*</span></label>
+                                        <select class="form-control select2" name='fk_id_cliente' id='fk_id_cliente'>
+                                            {% for cliente in clientes %}
+                                            {% if edita_grupo['fk_id_cliente'] == cliente.id %}
+                                            <option value="{{cliente.id}}" selected>{{cliente.str_nome}}</option>
+                                            {% else %}
+                                            <option value="{{cliente.id}}">{{cliente.str_nome}}</option>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                {% if novo == 0 %}
+                                <div class="col-md-2">
+                                    <div class="form-group">
+
+                                        <label for="exampleSelect1">Status <span class="text-danger">*</span></label>
+                                        <span class="switch switch-outline switch-icon switch-success">
+                                            <label>
+                                                {% if novo == 1 %}
+                                                <input type="checkbox" onclick="alt_status({{ edita_grupo['id'] }})"
+                                                    name="bol_status" id="bol_status" />
+                                                {% else %}
+                                                <input type="checkbox" {% if edita_grupo["bol_status"] %}
+                                                    checked="checked" {% endif %}
+                                                    onclick="alt_status({{ edita_grupo['id'] }})" name="bol_status"
+                                                    id="bol_status" />
+                                                {% endif %}
+                                                <span></span>
+                                            </label>
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            
+
+                            {% if novo == 0 %}
+                            <div class="row">
+                                <div class="col-md-12">
+
+                                    <div class="card card-custom">
+                                        <div class="card-header">
+                                            <div class="card-title">
+                                                <h3 class="card-label">
+                                                    Módulos
+                                                    <small>Escolha abaixo as permissões para cada módulo</small>
+                                                </h3>
+                                            </div>
+
+                                        </div>
+                                        <div class="card-body">
+                                            <table class="table table-bordered">
+
+                                                <thead>
+                                                    <tr>
+                                                        <th>Módulo</th>
+                                                        <th>Visualisar</th>
+                                                        <th>Incluir</th>
+                                                        <th>Alterar</th>
+                                                        <th>Excluir</th>
+                                                        <th>Marcar todos</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for modulo in modulos %}
+
+                                                    <tr>
+                                                        <th scope="row">{{ modulo['str_nome_modulo'] }}</th>
+                                                        <td>
+                                                            <span
+                                                                class="switch switch-outline switch-icon switch-success">
+                                                                <label>
+                                                                    <input type="checkbox" id="check_s_{{modulo['id']}}"
+                                                                        {% if modulos_dic[modulo['id']][0] %}
+                                                                        checked="checked" {% endif %}
+                                                                        onclick="alt_perm('s',{{ modulo['id'] }},{{ edita_grupo['id'] }})" />
+                                                                    <span></span>
+                                                                </label>
+                                                            </span>
+                                                        </td>
+
+                                                        {% if modulo['bol_crud']%}
+                                                            <td>
+                                                                <span
+                                                                    class="switch switch-outline switch-icon switch-success">
+                                                                    <label>
+                                                                        <input type="checkbox" id="check_i_{{modulo['id']}}"
+                                                                            {% if modulos_dic[modulo['id']][1] %}
+                                                                            checked="checked" {% endif %}
+                                                                            onclick="alt_perm('i',{{ modulo['id'] }},{{ edita_grupo['id'] }})" />
+                                                                        <span></span>
+                                                                    </label>
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <span
+                                                                    class="switch switch-outline switch-icon switch-success">
+                                                                    <label>
+                                                                        <input type="checkbox" id="check_u_{{modulo['id']}}"
+                                                                            {% if modulos_dic[modulo['id']][2] %}
+                                                                            checked="checked" {% endif %}
+                                                                            onclick="alt_perm('u',{{ modulo['id'] }},{{ edita_grupo['id'] }})" />
+                                                                        <span></span>
+                                                                    </label>
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <span
+                                                                    class="switch switch-outline switch-icon switch-success">
+                                                                    <label>
+                                                                        <input type="checkbox" id="check_d_{{modulo['id']}}"
+                                                                            {% if modulos_dic[modulo['id']][3] %}
+                                                                            checked="checked" {% endif %}
+                                                                            onclick="alt_perm('d',{{ modulo['id'] }},{{ edita_grupo['id'] }})" />
+                                                                        <span></span>
+                                                                    </label>
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <span
+                                                                    class="switch switch-outline switch-icon switch-success">
+                                                                    <label>
+                                                                        <input type="checkbox" id="check_t_{{modulo['id']}}"
+                                                                            
+                                                                            onclick="alt_perm_t('t',{{ modulo['id'] }},{{ edita_grupo['id'] }})" />
+                                                                        <span></span>
+                                                                    </label>
+                                                                </span>
+                                                            </td>
+                                                            {% endif %}
+                                                    </tr>
+                                                    
+                                                    {% endfor %}
+
+                                                </tbody>
+
+                                            </table>
+                                        </div>
+                                    </div>
+
+
+
+                                </div>
+                            </div>
+                            {% endif %}
+
+                        </div>
+                        <!--end::Body-->
+                        <div class="card-footer">
+                            {% if novo == 1 %}
+                            <button type="button" onclick="inc_nome()" class="btn btn-primary mr-2">Incluir</button>
+                            {% else %}
+                            <button type="button" onclick="alt_nome({{ edita_grupo['id'] }})"
+                                class="btn btn-primary mr-2">Alterar</button>
+                            {% endif %}
+                            <button type="button" class="btn btn-secondary" onclick="voltar()">Voltar</button>
+                        </div>
+                    </form>
+
+                </div>
+
+
+                <!--end: Card-->
+                <!--end::List Widget 8-->
+            </div>
+        </div>
+        <!--end::Row-->
+        <!--end::Dashboard-->
+    </div>
+    <!--end::Container-->
+</div>
+<!--end::Entry-->
+
+{% endblock %}
+
+{% block footer %}
+<script>var KTAppSettings = { "breakpoints": { "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400 }, "colors": { "theme": { "base": { "white": "#ffffff", "primary": "#3699FF", "secondary": "#E5EAEE", "success": "#1BC5BD", "info": "#8950FC", "warning": "#FFA800", "danger": "#F64E60", "light": "#E4E6EF", "dark": "#181C32" }, "light": { "white": "#ffffff", "primary": "#E1F0FF", "secondary": "#EBEDF3", "success": "#C9F7F5", "info": "#EEE5FF", "warning": "#FFF4DE", "danger": "#FFE2E5", "light": "#F3F6F9", "dark": "#D6D6E0" }, "inverse": { "white": "#ffffff", "primary": "#ffffff", "secondary": "#3F4254", "success": "#ffffff", "info": "#ffffff", "warning": "#ffffff", "danger": "#ffffff", "light": "#464E5F", "dark": "#ffffff" } }, "gray": { "gray-100": "#F3F6F9", "gray-200": "#EBEDF3", "gray-300": "#E4E6EF", "gray-400": "#D1D3E0", "gray-500": "#B5B5C3", "gray-600": "#7E8299", "gray-700": "#5E6278", "gray-800": "#3F4254", "gray-900": "#181C32" } }, "font-family": "Poppins" };</script>
+<script>
+
+    function voltar () {
+        window.location.href = "/permissoes_lista";
+    };
+
+    function alt_perm(tipo, mod, grupo) {
+        $.post("/_permissoes_altera_une_grupo_permissao", { tipo: tipo, mod: mod, grupo: grupo })
+            .done(function (data) {
+                var res = JSON.parse(data);
+                // alert(res.msg);
+                if (res.status == '1') {
+
+                    Swal.fire({
+                        text: res.msg,
+                        icon: "info",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok!",
+                        customClass: {
+                            confirmButton: "btn font-weight-bold btn-light-primary"
+                        }
+                    }).then(function () {
+
+                        KTUtil.scrollTop();
+
+                    });
+
+                } else {
+
+                    toastr.options = {
+                        "closeButton": false,
+                        "debug": false,
+                        "newestOnTop": false,
+                        "progressBar": false,
+                        "positionClass": "toast-top-right",
+                        "preventDuplicates": false,
+                        "onclick": null,
+                        "showDuration": "300",
+                        "hideDuration": "1000",
+                        "timeOut": "5000",
+                        "extendedTimeOut": "1000",
+                        "showEasing": "swing",
+                        "hideEasing": "linear",
+                        "showMethod": "fadeIn",
+                        "hideMethod": "fadeOut"
+                    };
+
+                    toastr.success("Permissão alterada com sucesso!");
+
+                }
+                // window.location.href = "/abre_relat";
+                //window.location.href="/login" ;
+            });
+    };
+
+    function alt_perm_t(tipo, mod, grupo) {
+        $.post("/_permissoes_altera_une_grupo_permissao", { tipo: tipo, mod: mod, grupo: grupo })
+            .done(function (data) {
+                var res = JSON.parse(data);
+                // alert(res.msg);
+                if (res.status == '1') {
+
+                    Swal.fire({
+                        text: res.msg,
+                        icon: "info",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok!",
+                        customClass: {
+                            confirmButton: "btn font-weight-bold btn-light-primary"
+                        }
+                    }).then(function () {
+
+                        KTUtil.scrollTop();
+
+                    });
+
+                } else {
+
+                    if (document.getElementById('check_s_'+mod).checked==true) {
+                        document.getElementById('check_s_'+mod).checked=false;
+
+                    } else {
+                        document.getElementById('check_s_'+mod).checked=true;
+
+                    }
+                    if (document.getElementById('check_i_'+mod).checked==true) {
+                        document.getElementById('check_i_'+mod).checked=false;
+
+                    } else {
+                        document.getElementById('check_i_'+mod).checked=true;
+
+                    }
+                    if (document.getElementById('check_u_'+mod).checked==true) {
+                        document.getElementById('check_u_'+mod).checked=false;
+
+                    } else {
+                        document.getElementById('check_u_'+mod).checked=true;
+
+                    }
+                    if (document.getElementById('check_d_'+mod).checked==true) {
+                        document.getElementById('check_d_'+mod).checked=false;
+
+                    } else {
+                        document.getElementById('check_d_'+mod).checked=true;
+
+                    }
+                    
+                    // Isto re-define o switch que altera TODOS os checkbox, para desativado, quando utilizado
+                    document.getElementById('check_t_'+mod).checked=false;
+
+
+                    toastr.options = {
+                        "closeButton": false,
+                        "debug": false,
+                        "newestOnTop": false,
+                        "progressBar": false,
+                        "positionClass": "toast-top-right",
+                        "preventDuplicates": false,
+                        "onclick": null,
+                        "showDuration": "300",
+                        "hideDuration": "1000",
+                        "timeOut": "5000",
+                        "extendedTimeOut": "1000",
+                        "showEasing": "swing",
+                        "hideEasing": "linear",
+                        "showMethod": "fadeIn",
+                        "hideMethod": "fadeOut"
+                    };
+
+                    toastr.success("Permissões alteradas com sucesso!");
+
+                }
+                // window.location.href = "/abre_relat";
+                //window.location.href="/login" ;
+            });
+    };
+
+    function hab_desab(grupo) {
+        $.post("/_permissoes_altera_todas_perm", { grupo: grupo })
+            .done(function (data) {
+                var res = JSON.parse(data);
+                // alert(res.msg);
+                if (res.status == '1') {
+
+                    Swal.fire({
+                        text: res.msg,
+                        icon: "info",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok!",
+                        customClass: {
+                            confirmButton: "btn font-weight-bold btn-light-primary"
+                        }
+                    }).then(function () {
+
+                        KTUtil.scrollTop();
+
+                    });
+
+                } else {
+                    window.location.href = "/permissoes_edicao";
+                }
+                // window.location.href = "/abre_relat";
+                //window.location.href="/login" ;
+            });
+    };
+
+ 
+    function alt_nome(grupo) {
+        var str_nome = document.getElementById('str_nome').value;
+        var fk_id_cliente = document.getElementById('fk_id_cliente').value;
+        $.post("/_permissoes_altera_nome", { str_nome: str_nome, grupo: grupo, fk_id_cliente: fk_id_cliente })
+            .done(function (data) {
+                var res = JSON.parse(data);
+                // alert(res.msg);
+                if (res.status == '1') {
+
+                    Swal.fire({
+                        text: res.msg,
+                        icon: "info",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok!",
+                        customClass: {
+                            confirmButton: "btn font-weight-bold btn-light-primary"
+                        }
+                    }).then(function () {
+
+                        KTUtil.scrollTop();
+
+                    });
+
+                } else {
+
+                    toastr.options = {
+                        "closeButton": false,
+                        "debug": false,
+                        "newestOnTop": false,
+                        "progressBar": false,
+                        "positionClass": "toast-top-right",
+                        "preventDuplicates": false,
+                        "onclick": null,
+                        "showDuration": "300",
+                        "hideDuration": "1000",
+                        "timeOut": "5000",
+                        "extendedTimeOut": "1000",
+                        "showEasing": "swing",
+                        "hideEasing": "linear",
+                        "showMethod": "fadeIn",
+                        "hideMethod": "fadeOut"
+                    };
+
+                    toastr.success("Nome alterado com sucesso");
+
+                }
+                // window.location.href = "/abre_relat";
+                //window.location.href="/login" ;
+            });
+    };
+    
+    $('#fk_id_cliente').select2({
+        placeholder: "Selecione um cliente"
+    });
+
+    function alt_status(grupo) {
+        $.post("/_permissoes_altera_status", { grupo: grupo })
+            .done(function (data) {
+                var res = JSON.parse(data);
+                // alert(res.msg);
+                if (res.status == '1') {
+
+                    Swal.fire({
+                        text: res.msg,
+                        icon: "info",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok!",
+                        customClass: {
+                            confirmButton: "btn font-weight-bold btn-light-primary"
+                        }
+                    }).then(function () {
+
+                        KTUtil.scrollTop();
+
+                    });
+
+                } else {
+
+                    toastr.options = {
+                        "closeButton": false,
+                        "debug": false,
+                        "newestOnTop": false,
+                        "progressBar": false,
+                        "positionClass": "toast-top-right",
+                        "preventDuplicates": false,
+                        "onclick": null,
+                        "showDuration": "300",
+                        "hideDuration": "1000",
+                        "timeOut": "5000",
+                        "extendedTimeOut": "1000",
+                        "showEasing": "swing",
+                        "hideEasing": "linear",
+                        "showMethod": "fadeIn",
+                        "hideMethod": "fadeOut"
+                    };
+
+                    toastr.success("Status alterado com sucesso");
+
+                }
+                // window.location.href = "/abre_relat";
+                //window.location.href="/login" ;
+            });
+    };
+
+</script>
+{% endblock %}

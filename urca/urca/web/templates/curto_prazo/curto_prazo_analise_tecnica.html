@@ -1,0 +1,246 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+<div class="subheader py-2 py-lg-4 subheader-solid" id="kt_subheader">
+        <div class="container-fluid d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap">
+            <!-- Título e Dropdowns -->
+            <div class="d-flex align-items-center flex-grow-1" id="produtosDropdown">
+                <h5 class="text-dark font-weight-bold mt-2 mb-2 mr-5">Análise Técnica</h5>
+                
+                <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200"></div>
+
+                <div class="d-flex align-items-center">
+                    <select name="m" id="m-dropdown" class="form-control mr-4 select2">
+                        <option value="M+3">M+3</option>
+                        <option value="M+2">M+2</option>
+                        <option value="M+1">M+1</option>
+                        <option value="M+0">M+0</option>
+                    </select>
+                </div>
+
+                <!-- Dropdown de Seleção de Plots -->
+                <div class="text-center" id="produtosDropdown">
+                    <div class="d-flex align-items-center">
+                        <select name="produtos" id="saida-dropdown" class="form-control">
+                            <option value="linear_regression" data-type="regression">Regressão Linear</option>
+                            <option value="ridge_regression" data-type="regression">Regressão de Crista</option>
+                            <option value="logistic_regression" data-type="regression">Regressão Logística</option>
+                            <hr>
+                            <option value="lgbm_classifier" data-type="classifier">Classificação LGBM</option>
+                            <option value="xgboost_classifier" data-type="classifier">Classificação XGBoost</option>
+                            <option value="random_forest" data-type="classifier">Random Forest</option>
+                            <option value="svc" data-type="classifier">Support Vector Classifier</option>
+                            <hr>
+                            <option value="TODOS">Todos os Gráficos</option>
+                            <!-- Adicione mais opções conforme necessário -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200 d-none"></div>
+            <!-- Botão Centralizado na Direita -->
+            <div class="d-flex align-items-center justify-content-end flex-grow-0">
+                <button class="btn btn-primary mr-2 d-none" id="backtest">1. Executar Back-test</button>
+            <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-2 bg-gray-200 d-none"></div>
+
+                <button class="btn btn-primary d-none"  id="machine">2. Iniciar Machine Learning</button>
+            </div>
+
+        </div>
+    </div>
+
+<div class="d-flex flex-column-fluid">
+    <div class="container mt-5">
+        
+        <!-- Seção para gerar gráficos principais -->
+        
+
+        <div id="charts" >
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Aguarde...</span>
+                </div>
+                <p id="loadingText"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showLoadingModal(text) {
+    $('#loadingText').text(text);
+    $('#loadingModal').modal('show');
+}
+
+function hideLoadingModal() {
+    setTimeout(function() {
+        $('#loadingModal').modal('hide');
+    }, 250);
+}
+</script>
+{% endblock %}
+
+{% block footer %}
+<script src="js/waitingfor.js"></script>
+<script src="assets/js/plotly-2.32.0.min.js" charset="utf-8"></script>
+<script>
+
+    function resizePlot(id) {
+            var plotCard = document.getElementById(id);
+            var width = plotCard.clientWidth;
+            var height = plotCard.clientHeight;
+
+            // Adjust the plot dimensions
+            var update = {
+                width: width - 20,  // Subtract some padding/margin if necessary
+                height: height - 20
+            };
+
+            Plotly.relayout(id, update);
+        }
+
+var KTAppSettings = {
+    "breakpoints": {
+        "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400
+    },
+    "colors": {
+        "theme": {
+            "base": {
+                "white": "#3699FF", "primary": "#3699FF", "secondary": "#E5EAEE",
+                "success": "#1BC5BD", "info": "#8950FC", "warning": "#FFA800",
+                "danger": "#F64E60", "light": "#E4E6EF", "dark": "#181C32"
+            },
+            "light": {
+                "white": "#ffffff", "primary": "#E1F0FF", "secondary": "#EBEDF3",
+                "success": "#C9F7F5", "info": "#EEE5FF", "warning": "#FFF4DE",
+                "danger": "#FFE2E5", "light": "#F3F6F9", "dark": "#D6D6E0"
+            },
+            "inverse": {
+                "white": "#ffffff", "primary": "#ffffff", "secondary": "#3F4254",
+                "success": "#ffffff", "info": "#ffffff", "warning": "#ffffff",
+                "danger": "#ffffff", "light": "#464E5F", "dark": "#ffffff"
+            }
+        },
+        "gray": {
+            "gray-100": "#F3F6F9", "gray-200": "#EBEDF3", "gray-300": "#E4E6EF",
+            "gray-400": "#D1D3E0", "gray-500": "#B5B5C3", "gray-600": "#7E8299",
+            "gray-700": "#5E6278", "gray-800": "#3F4254", "gray-900": "#181C32"
+        }
+    },
+    "font-family": "Poppins"
+};
+
+$('#saida-dropdown').on('change', function() {
+    let m = $('#m-dropdown option:selected').val();
+    loadPlot(m);
+});
+$('#m-dropdown').on('change', function() {
+    let m = $('#m-dropdown option:selected').val();
+    loadPlot(m);
+});
+
+let m = $('#m-dropdown option:selected').val();
+loadPlot(m);
+
+function loadPlot(m) {
+    let grafico = $('#saida-dropdown option:selected').text();
+    let tipo = $('#saida-dropdown option:selected').val();
+    let type = $('#saida-dropdown option:selected').data('type');
+    showLoadingModal('Obtendo gráfico ' + grafico + '...');
+
+    console.log(tipo);
+
+    if (tipo === "TODOS") {
+        
+        // clear the charts
+        $('#charts').empty();
+        $('#saida-dropdown option').each(function() {
+        let plot = $(this).val();
+        let plotName = $(this).text();
+        let type = $(this).data('type');
+
+        if (plot !== "" && plot !== "TODOS") {
+            showLoadingModal('Obtendo gráfico ' + plotName + '...');
+            
+            
+
+            $.post("/_plot_" + type, { name: plot, m: m })
+                .done(function(data) {
+                    hideLoadingModal();
+                    var plotData = JSON.parse(JSON.parse(data).plot);
+                    console.log(plotData);
+
+                    var chartId = 'chart_' + tipo + "_" + plotName ;
+
+                    // Adicionar um contêiner para o gráfico
+                    $('#charts').append('<div id="' + chartId + '" class="card mb-4" style="border-radius: 15px; padding: 10px;"></div>');
+
+                    // Plotar o gráfico usando Plotly
+                    Plotly.newPlot(chartId, plotData, plotData.layout);
+
+                    resizePlot(chartId);
+
+                })
+                .fail(function() {
+                    hideLoadingModal();
+                });
+        }
+    });
+    } else {
+        $.post("/_plot_" + type, { name: tipo, m: m })
+            .done(function(data) {
+                // clear the charts
+                $('#charts').empty();
+                hideLoadingModal();
+                var plotData = JSON.parse(JSON.parse(data).plot);
+
+                var chartId = 'chart_' + tipo;
+
+                // Adicionar um contêiner para o gráfico
+                $('#charts').append('<div id="' + chartId + '" class="card mb-4" style="border-radius: 15px; padding: 10px;"></div>');
+
+                // Plotar o gráfico usando Plotly
+                Plotly.newPlot(chartId, plotData, plotData.layout);
+
+                resizePlot(chartId);
+            })
+            .fail(function() {
+                hideLoadingModal();
+                alert('Erro ao obter gráfico para o arquivo ' + arquivo + '. Tente novamente.');
+            });
+    }
+}
+
+
+$('#backtest').on('click', function() {
+    $.post("/_backtest")
+        .done(function(data) {
+            toastr.success('Executando backtest. Pode demorar por volta de ~10 minutos!');
+        })
+        .fail(function() {
+            hideLoadingModal();
+            alert('Erro ao gerar novo gráfico. Tente novamente.');
+        });
+});
+
+$('#machine').on('click', function() {
+    $.post("/_machine")
+        .done(function(data) {
+            toastr.success('Executando Machine Learning. Pode demorar por volta de ~1 minuto');
+        })
+        .fail(function() {
+            hideLoadingModal();
+            alert('Erro ao gerar novo gráfico. Tente novamente.');
+        });
+});
+</script>
+{% endblock %}

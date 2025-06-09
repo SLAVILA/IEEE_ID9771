@@ -1,0 +1,265 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+<div class="subheader py-2 py-lg-4 subheader-solid" id="kt_subheader">
+        <div class="container-fluid d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap">
+            <!-- Título e Dropdowns -->
+            <div class="d-flex align-items-center flex-grow-1" id="produtosDropdown">
+                <h5 class="text-dark font-weight-bold mt-2 mb-2 mr-5">Markov</h5>
+                
+                <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200"></div>
+                <div class="text-center" id="produtosDropdown">
+                    <div class="d-flex align-items-center">
+                        <!-- <label for="arquivos-dropdown" class="col-form-label mr-2">Dados:</label> -->
+                        <select name="produtos" id="arquivos-dropdown" class="form-control">
+                            {% for arquivo in novos_arquivos %}
+                                <option value="{{ arquivo }}">{{ arquivo|upper }}</option>
+                            {% endfor %}
+                            <!-- Adicione mais opções conforme necessário -->
+                        </select>
+                    </div>
+                </div>
+                <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200 ml-5"></div>
+                {% if datas %}
+                    <div class="d-flex align-items-center">
+                        <!-- <label for="saida-dropdown" class="col-form-label mr-2">Data:</label> -->
+                        <select name="produtos" id="saida-dropdown" class="form-control mr-4 select2">
+                            {% for i in datas %}
+                                <option value="{{ i }}">{{ i.replace('_', '/') }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% else %}
+                    <label class="text-center mr-4 mt-2">Nenhum gráfico gerado ainda.</label>
+                {% endif %}
+            </div>
+
+            <!-- <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200"></div> -->
+
+            <!-- Botão Centralizado na Direita -->
+            <div class="d-flex align-items-center justify-content-end flex-grow-0" style="display: none;">
+                <button class="btn btn-primary" data-toggle="modal" data-target="#configModal" style="display: none;">Gerar novamente</button>
+            </div>
+        </div>
+    </div>
+
+<div class="d-flex flex-column-fluid">
+    <div class="container mt-5">
+        
+        
+        
+        
+
+        
+
+        <!-- Div para gráficos -->
+        <div id="charts"></div>
+    </div>
+</div>
+
+
+<!-- Modal para seleção de arquivos e iterações -->
+    <div class="modal fade" id="configModal" tabindex="-1" aria-labelledby="configModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="configModalLabel">Configurar Gráficos</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="configForm">
+                        <div class="form-group">
+                            <label for="modal-arquivos-dropdown">Selecione um Arquivo:</label>
+                            <select class="form-control" id="modal-arquivos-dropdown">
+                                <option value="">Selecione um arquivo</option>
+                                <option value="TODOS">Todos os arquivos</option>
+                                {% for arquivo in arquivos_totais %}
+                                    <option value="{{ arquivo }}">{{ arquivo|upper }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="modal-iteracoes">Nº Iterações (min: 16 - padrão: 200):</label>
+                            <input type="number" class="form-control" id="iteracoes" min="16" value="200">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="start">Iniciar Geração (tempo estimado: ~<span id="tempo"></span>)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Aguarde...</span>
+                </div>
+                <p id="loadingText"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showLoadingModal(text) {
+    $('#loadingText').text(text);
+    $('#loadingModal').modal('show');
+}
+
+function hideLoadingModal() {
+    setTimeout(function() {
+        $('#loadingModal').modal('hide');
+    }, 250);
+}
+</script>
+
+{% endblock %}
+
+{% block footer %}
+<script src="js/waitingfor.js"></script>
+<script src="assets/js/plotly-2.32.0.min.js" charset="utf-8"></script>
+<script>var KTAppSettings = { "breakpoints": { "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400 }, "colors": { "theme": { "base": { "white": "#3699FF", "primary": "#3699FF", "secondary": "#E5EAEE", "success": "#1BC5BD", "info": "#8950FC", "warning": "#FFA800", "danger": "#F64E60", "light": "#E4E6EF", "dark": "#181C32" }, "light": { "white": "#ffffff", "primary": "#E1F0FF", "secondary": "#EBEDF3", "success": "#C9F7F5", "info": "#EEE5FF", "warning": "#FFF4DE", "danger": "#FFE2E5", "light": "#F3F6F9", "dark": "#D6D6E0" }, "inverse": { "white": "#ffffff", "primary": "#ffffff", "secondary": "#3F4254", "success": "#ffffff", "info": "#ffffff", "warning": "#ffffff", "danger": "#ffffff", "light": "#464E5F", "dark": "#ffffff" } }, "gray": { "gray-100": "#F3F6F9", "gray-200": "#EBEDF3", "gray-300": "#E4E6EF", "gray-400": "#D1D3E0", "gray-500": "#B5B5C3", "gray-600": "#7E8299", "gray-700": "#5E6278", "gray-800": "#3F4254", "gray-900": "#181C32" } }, "font-family": "Poppins" };</script>
+<script>
+$(document).ready(function () {
+
+    function resizePlot(id) {
+            // Get the card dimensions
+            var plotCard = document.getElementById(id);
+            var width = plotCard.clientWidth;
+            var height = plotCard.clientHeight;
+
+            // Adjust the plot dimensions
+            var update = {
+                width: width - 20,  // Subtract some padding/margin if necessary
+                height: height - 20
+            };
+
+            Plotly.relayout(id, update);
+        }
+
+    // on change 
+    $('#arquivos-dropdown').on('change', function() {
+        plot();
+    });
+
+    // on change 
+    $('#saida-dropdown').on('change', function() {
+        plot();
+    });
+
+    // on change 
+    $('#modal-arquivos-dropdown').on('change', function() {
+        tempoEstimado();
+    });
+    
+    plot();
+
+    function plot() {
+        $('#charts').empty();
+
+        let arquivo = $('#arquivos-dropdown').val();
+        let data = $('#saida-dropdown').val();
+
+        if (!arquivo || !data) {
+            return;
+        }
+        
+        showLoadingModal('Obtendo gráfico ' + arquivo + ' ...');
+
+        $.post("/_markov_obter", { pasta: arquivo, data: data })
+            .done(function(data) {
+                $('#charts').empty();
+
+                // Parse JSON response
+                var plotData = JSON.parse(JSON.parse(data).plot2);
+                var plotData2 = JSON.parse(JSON.parse(data).plot);
+                console.log(plotData.data);
+                console.log(plotData.layout);
+                var chartId = 'chart_' + "saida";
+                var chartId2 = 'chart2_' + "saida";
+
+                // Adicionar um contêiner para o gráfico
+                $('#charts').append('<div id="' + chartId + '" class="card mb-4" style="border-radius: 15px; padding: 10px; height: 600px"></div>');
+                $('#charts').append('<div id="' + chartId2 + '" class="card mb-4" style="border-radius: 15px; padding: 10px; height: 600px"></div>');
+
+                // Plotar o gráfico usando Plotly
+                Plotly.newPlot(chartId, plotData.data, plotData.layout);
+                Plotly.newPlot(chartId2, plotData2.data, plotData2.layout);
+                hideLoadingModal();
+
+                resizePlot(chartId);
+                resizePlot(chartId2);
+
+            })
+            .fail(function() {
+                hideLoadingModal();
+                alert('Erro ao obter gráfico para o arquivo ' + arquivo + '. Tente novamente.');
+            });
+    }
+
+    $('#start').on('click', function() {
+        var iteracoes = $('#iteracoes').val();
+        var arquivo = $('#modal-arquivos-dropdown').val();
+        $.post("/_markov", { iteracoes: iteracoes, arquivo: arquivo })
+            .done(function(data) {
+                toastr.success('Gerando gráfico Markov. Pode demorar por volta de ~4 horas!');
+
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+                
+            })
+            .fail(function() {
+                hideLoadingModal();
+                alert('Erro ao gerar novo gráfico. Tente novamente.');
+            });
+    });
+
+    function tempoEstimado() {
+    var iteracoes = $('#iteracoes').val();
+    var arquivos = {{ arquivos_totais | length }};
+    var tempoPorIteracao = 4 / 500; // 4 horas para 500 iterações
+    var tempo = (iteracoes * tempoPorIteracao);
+
+    
+    var arquivo = $('#modal-arquivos-dropdown').val();
+
+    if (arquivo == 'TODOS') {
+        tempo = tempo * arquivos;
+    }
+    
+    // Arredondar o tempo para o valor mais próximo
+    var tempoArredondado = Math.round(tempo);
+
+    
+    console.log(tempoArredondado);
+
+    // Exibir o tempo em horas ou minutos
+    if (tempoArredondado < 1) {
+        var minutos = Math.round(tempo * 60); // Converter horas para minutos
+        $('#tempo').text(minutos + ' minutos');
+    } else {
+        $('#tempo').text(tempoArredondado + ' horas');
+    }
+}
+
+    $('#iteracoes').on('change', tempoEstimado);
+
+    // ao mudar o input também
+    $('#iteracoes').on('input', tempoEstimado);
+
+    tempoEstimado();
+
+
+    
+});
+</script>
+{% endblock %}

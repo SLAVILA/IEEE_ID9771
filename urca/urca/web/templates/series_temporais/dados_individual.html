@@ -1,0 +1,618 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+
+<div class="subheader py-2 py-lg-4 subheader-solid" id="kt_subheader">
+              
+    <div class="container-fluid d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap">
+        <!--begin::Info-->
+        <div class="d-flex align-items-center flex-wrap mr-2">
+            <!--begin::Page Title-->
+            <h5 class="text-dark font-weight-bold mt-2 mb-2 mr-5">Produto Individual</h5>
+            <!--end::Page Title-->
+            <!--begin::Actions-->
+            <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200"></div>
+            
+                        
+            <div class="text-center" id="produtosDropdown">
+                <div class="row justify-content-center align-items-center">
+                    <div class="col-auto">
+                        <label for="produtos-dropdown" class="col-form-label">Produto:</label>
+                    </div>
+                    <div class="col-auto">
+                        <select name="produtos" id="produtos-dropdown" class="form-control">
+                            <option value="">Selecione um produto</option>
+                            {% for produto in produtos %}
+                                <option value="{{ produto }}">{{ produto|upper }}</option>
+                            {% endfor %}
+                            <!-- Adicione mais opções conforme necessário -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+           
+        </div>
+        <div class="d-flex align-items-center" style="display: none;">
+                                    <!--begin::Actions-->
+                                                                        <!--end::Actions-->
+                                    <!--begin::Dropdown-->
+            <div class="dropdown dropdown-inline m-5" data-toggle="tooltip" title="Alterar visualização das colunas" data-placement="right">
+                <!-- <a href="#" class="btn btn-primary font-weight-bolder btn-sm" style="font-size: 0.8rem" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Mostrar / Esconder Colunas
+                </a> -->
+                <div class="dropdown-menu dropdown-menu-md dropdown-menu-right p-0 m-0">
+                    <!--begin::Navigation-->
+                    <ul class="navi navi-hover">
+                        <li class="navi-header font-weight-bold py-4">
+                            <span class="font-size-lg">Mostrar / Esconder colunas:</span>
+                            <i class="flaticon2-information icon-md text-muted" data-toggle="tooltip" data-placement="right" title="Click to learn more..."></i>
+                        </li>
+                        <li class="navi-separator mb-3 opacity-70"></li>
+                        <!-- Loop through your columns here -->
+                        {% for coluna in colunas %}
+                        <li class="navi-item">
+                            <a href="#" class="navi-link">
+                                <span class="navi-text">
+                                    <!-- Use the column_name as the ID and check the column_status to determine the label color -->
+                                    <span onclick="visibcoluna('{{ coluna['nome'] }}')" class="label label-xl label-inline {% if coluna['visivel'] == '1' %}label-light-success{% else %}label-light-danger{% endif %}">{{ coluna['nome'] }}</span>
+                                </span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                        <!-- End of loop -->
+                    </ul>
+                    <!--end::Navigation-->
+                </div>
+            </div>
+
+            <!--end::Dropdown-->
+        </div>
+        <!--end::Info-->
+        <!--begin::Toolbar-->
+        
+        
+        <!--end::Toolbar-->
+    </div>
+</div>
+<br>
+
+
+
+<!--begin::Entry-->
+<div class="d-flex flex-column-fluid">
+    <!--begin::Container-->
+    <div class="container">
+        <!--begin::Dashboard-->
+        <!--begin::Row-->
+        <div class="row">
+            
+            <div class="col-lg-12 col-xxl-12 order-1 order-xxl-12 mb-5">
+                <!--begin::Card-->
+                <div class="card card-custom" id="cardChart" style="display: none;">
+                    <div class="card-body">
+                        <!--begin: Chart-->
+                        <div id="chart"></div>
+                        <!--end: Chart-->
+                    </div>
+                </div>
+                <!--end::Card-->
+            </div>
+
+            <div class="col-lg-12 col-xxl-12 order-1 order-xxl-12 mb-5">
+                <!--begin::Card-->
+                <div class="card card-custom" id="card1" style="display: none;">
+                    <div class="card-body">
+                        <!--begin: Datatable-->
+                        <div class="datatable datatable-bordered datatable-head-custom" id="kt_datatable"></div>
+                        <!--end: Datatable-->
+                    </div>
+                </div>
+                <!--end::Card-->
+            </div>
+
+            <div class="col-lg-12 col-xxl-12 order-1 order-xxl-12 mb-5">
+                <!--begin::Card-->
+                <div class="card card-custom" id="card2" style="display: none;">
+                    <div class="card-body">
+                        <!--begin: Datatable-->
+                        <div class="datatable datatable-bordered datatable-head-custom" id="kt_datatable2"></div>
+                        <!--end: Datatable-->
+                    </div>
+                </div>
+                <!--end::Card-->
+            </div>
+            
+        </div>
+        <!--end::Row-->
+        <!--end::Dashboard-->
+    </div>
+    <!--end::Container-->
+</div>
+<!--end::Entry-->
+<!-- Modal -->
+<!-- Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Aguarde...</span>
+                </div>
+                <p id="loadingText"></p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function showLoadingModal(text) {
+    $('#loadingText').text(text);
+    $('#loadingModal').modal('show');
+}
+function hideLoadingModal() {
+    setTimeout(function() {
+        $('#loadingModal').modal('hide');
+    }, 250);
+}
+</script>
+
+{% endblock %}
+
+{% block footer %}
+<script src="js/waitingfor.js"></script>
+<script src="assets/js/plotly-2.32.0.min.js" charset="utf-8"></script>
+<script>var KTAppSettings = { "breakpoints": { "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400 }, "colors": { "theme": { "base": { "white": "#ffffff", "primary": "#3699FF", "secondary": "#E5EAEE", "success": "#1BC5BD", "info": "#8950FC", "warning": "#FFA800", "danger": "#F64E60", "light": "#E4E6EF", "dark": "#181C32" }, "light": { "white": "#ffffff", "primary": "#E1F0FF", "secondary": "#EBEDF3", "success": "#C9F7F5", "info": "#EEE5FF", "warning": "#FFF4DE", "danger": "#FFE2E5", "light": "#F3F6F9", "dark": "#D6D6E0" }, "inverse": { "white": "#ffffff", "primary": "#ffffff", "secondary": "#3F4254", "success": "#ffffff", "info": "#ffffff", "warning": "#ffffff", "danger": "#ffffff", "light": "#464E5F", "dark": "#ffffff" } }, "gray": { "gray-100": "#F3F6F9", "gray-200": "#EBEDF3", "gray-300": "#E4E6EF", "gray-400": "#D1D3E0", "gray-500": "#B5B5C3", "gray-600": "#7E8299", "gray-700": "#5E6278", "gray-800": "#3F4254", "gray-900": "#181C32" } }, "font-family": "Poppins" };</script>
+<script>
+
+    var precos = null;
+    var produtos = null;
+    var dados_produto = null;
+    var pld = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        showLoadingModal('Obtendo dados históricos...');
+        $.post("/_obter_precos", {visualizacao: 'Produto Individual'})
+            .done(function (data) {
+                var dados = JSON.parse(data);
+                precos = dados.preco;
+                produtos = dados.produtos;
+                pld = [];
+
+                console.log(precos);
+                console.log(produtos);
+                console.log(pld);
+
+                var produtosDropdown = document.getElementById('produtosDropdown');
+                produtosDropdown.style.display = 'block';
+
+                var dropdown = $('#produtos-dropdown');
+                dropdown.empty();
+                $.each(produtos, function(key, value) {
+                    dropdown.append($('<option></option>').attr('value', value).text(value));
+                });
+
+                var produto_selecionado = document.getElementById('produtos-dropdown').value;
+                // Initialize an array to store filtered data
+                dados_produto = [];
+
+                // Iterate over the keys of the object
+                for (var key in precos) {
+                    precos[key]["id"] = key;
+                    dados_produto.push(precos[key]);
+                }
+
+                // Iterate over the keys of the object
+                for (var key in dados.pld) {
+                    dados.pld[key]["id"] = key;
+                    pld.push(dados.pld[key]);
+                }
+                init(dados_produto, produto_selecionado);
+            });
+    });
+    
+
+    var KTDatatableRemoteAjaxDemo = function () {
+        var demo = function () {
+        var datatable = $('#kt_datatable').KTDatatable({
+            // datasource definition
+            data: {
+                type: 'local', // Alterado para 'local'
+                source: dados_produto, // Utilizando a variável dados_produto como fonte de dados
+                pageSize: 10,
+                serverPaging: true,
+                serverFiltering: true,
+                serverSorting: true,
+            },
+
+                // layout definition
+                layout: {
+                    scroll: false,
+                    footer: false,
+                },
+
+                // column sorting
+                sortable: true,
+
+                pagination: true,
+
+                search: {
+                    input: $('#kt_datatable_search_query_nome'),
+                    key: 'generalSearch'
+                },
+
+                // columns definition
+                columns: [
+                {
+                    field: 'id',
+                    title: '#',
+                    width: 40,
+                    textAlign: 'center'
+                },
+                {
+                    field: 'produto',
+                    title: 'Produto',
+                    sortable: 'asc',
+                    type: 'number',
+                    selector: false,
+                    textAlign: 'center',
+                }, 
+                {
+                    field: 'submercado',
+                    width: 80,
+                    title: 'Submercado',
+                }, 
+                {
+                    field: 'expiracao',
+                    textAlign: 'center',
+                    title: 'Expiração',
+                    autoHide: false,
+                }, 
+                {
+                    field: 'data',
+                    title: 'Data',
+                }, 
+                {
+                    field: 'volume',
+                    textAlign: 'center',
+                    title: 'Volume',
+                },
+                {
+                    field: 'VWAP',
+                    textAlign: 'center',
+                    title: 'VWAP',
+                },
+                {
+                    field: 'M',
+                    textAlign: 'center',
+                    title: 'M',
+                },
+                {
+                    field: 'H',
+                    textAlign: 'center',
+                    title: 'H',
+                },
+                {
+                    field: 'h',
+                    textAlign: 'center',
+                    title: 'h',
+                },
+                {
+                    field: 'h_cresc',
+                    textAlign: 'center',
+                    title: 'h_cresc',
+                },
+                
+                
+                ],
+
+            });
+
+
+        };
+
+        return {
+            // public functions
+            init: function () {
+                demo();
+            },
+        };
+    }();
+
+    var KTDatatableRemoteAjaxDemo2 = function () {
+        var demo = function () {
+        var datatable = $('#kt_datatable2').KTDatatable({
+            // datasource definition
+            data: {
+                type: 'local', // Alterado para 'local'
+                source: pld, // Utilizando a variável dados_produto como fonte de dados
+                pageSize: 10,
+                serverPaging: true,
+                serverFiltering: true,
+                serverSorting: true,
+            },
+
+                // layout definition
+                layout: {
+                    scroll: false,
+                    footer: false,
+                },
+
+                // column sorting
+                sortable: true,
+
+                pagination: true,
+
+                search: {
+                    input: $('#kt_datatable_search_query_nome'),
+                    key: 'generalSearch'
+                },
+
+                // columns definition
+                columns: [
+                {
+                    field: 'id',
+                    title: '#',
+                    width: 40,
+                    textAlign: 'center',
+                }, 
+                {
+                    field: 'data',
+                    title: 'Data',
+                    textAlign: 'center',
+                }, 
+                {
+                    field: 'submercado',
+                    title: 'Submercado',
+                }, 
+                {
+                    field: 'PLD_mensal_medio',
+                    title: 'PLD Mensal Médio',
+                }, 
+                ],
+
+            });
+
+
+        };
+
+        return {
+            // public functions
+            init: function () {
+                demo();
+            },
+        };
+    }();
+
+
+    function generateChart(dados_produto, produto_selecionado) {
+        console.log("Gerando gráfico para " + produto_selecionado);
+        console.log(dados_produto);
+        dados_produto['data'] = {
+            'data': [],
+            'VWAP': []
+        };
+        dados_produto['data']['data'] = dados_produto.map(function (item) {
+            return new Date(item.data);
+        });
+        dados_produto['data']['VWAP'] = dados_produto.map(function (item) {
+            return item.VWAP;
+        });
+        let min = new Date(Math.min(...dados_produto['data']['data']));
+        let max = new Date(Math.max(...dados_produto['data']['data']));
+        var fig = {
+            data: [],
+            layout: {
+                title: `VWAP x Data - ${produto_selecionado}`,
+                xaxis: {title: 'Data'},
+                yaxis: {title: 'VWAP'},
+                hovermode: 'x',
+                showlegend: true
+            }
+        };
+
+        if (produto_selecionado.includes('15')) {
+            fig.data.push({
+                x: [min, max],
+                y: [30.26, 30.26],
+                mode: 'lines',
+                line: {color: 'red', width: 2, dash: 'dash'},
+                name: 'PLD piso 2015'
+            });
+            fig.data.push({
+                x: [min, max],
+                y: [388.48, 388.48],
+                mode: 'lines',
+                line: {color: 'green', width: 2, dash: 'dash'},
+                name: 'PLD teto 2015'
+            });
+        } else if (produto_selecionado.includes('16')) {
+            fig.data.push({
+                x: [min, max],
+                y: [30.25, 30.25],
+                mode: 'lines',
+                line: {color: 'red', width: 2, dash: 'dash'},
+                name: 'PLD piso 2016'
+            });
+            fig.data.push({
+                x: [min, max],
+                y: [422.56, 422.56],
+                mode: 'lines',
+                line: {color: 'green', width: 2, dash: 'dash'},
+                name: 'PLD teto 2016'
+            });
+        } else if (produto_selecionado.includes('17')) {
+            fig.data.push({
+                x: [min, max],
+                y: [33.68, 33.68],
+                mode: 'lines',
+                line: {color: 'red', width: 2, dash: 'dash'},
+                name: 'PLD piso 2017'
+            });
+            fig.data.push({
+                x: [min, max],
+                y: [533.82, 533.82],
+                mode: 'lines',
+                line: {color: 'green', width: 2, dash: 'dash'},
+                name: 'PLD teto 2017'
+            });
+        } else if (produto_selecionado.includes('18')) {
+            fig.data.push({
+                x: [min, max],
+                y: [40.16, 40.16],
+                mode: 'lines',
+                line: {color: 'red', width: 2, dash: 'dash'},
+                name: 'PLD piso 2018'
+            });
+            fig.data.push({
+                x: [min, max],
+                y: [505.18, 505.18],
+                mode: 'lines',
+                line: {color: 'green', width: 2, dash: 'dash'},
+                name: 'PLD teto 2018'
+            });
+        } else if (produto_selecionado.includes('19')) {
+            fig.data.push({
+                x: [min, max],
+                y: [42.35, 42.35],
+                mode: 'lines',
+                line: {color: 'red', width: 2, dash: 'dash'},
+                name: 'PLD piso 2019'
+            });
+            fig.data.push({
+                x: [min, max],
+                y: [513.89, 513.89],
+                mode: 'lines',
+                line: {color: 'green', width: 2, dash: 'dash'},
+                name: 'PLD teto 2019'
+            });
+        } else if (produto_selecionado.includes('20')) {
+            fig.data.push({
+                x: [min, max],
+                y: [39.68, 39.68],
+                mode: 'lines',
+                line: {color: 'red', width: 2, dash: 'dash'},
+                name: 'PLD piso 2020'
+            });
+            fig.data.push({
+                x: [min, max],
+                y: [559.75, 559.75],
+                mode: 'lines',
+                line: {color: 'green', width: 2, dash: 'dash'},
+                name: 'PLD teto 2020'
+            });
+        } else if (produto_selecionado.includes('21')) {
+            fig.data.push({
+                x: [min, max],
+                y: [49.77, 49.77],
+                mode: 'lines',
+                line: {color: 'red', width: 2, dash: 'dash'},
+                name: 'PLD piso 2021'
+            });
+            fig.data.push({
+                x: [min, max],
+                y: [583.88, 583.88],
+                mode: 'lines',
+                line: {color: 'green', width: 2, dash: 'dash'},
+                name: 'PLD teto 2021'
+            });
+        } else if (produto_selecionado.includes('22')) {
+            fig.data.push({
+                x: [min, max],
+                y: [55.7, 55.7],
+                mode: 'lines',
+                line: {color: 'red', width: 2, dash: 'dash'},
+                name: 'PLD piso 2022'
+            });
+            fig.data.push({
+                x: [min, max],
+                y: [646.58, 646.58],
+                mode: 'lines',
+                line: {color: 'green', width: 2, dash: 'dash'},
+                name: 'PLD teto 2022'
+            });
+        } else if (produto_selecionado.includes('23')) {
+            fig.data.push({
+                x: [min, max],
+                y: [69.04, 69.04],
+                mode: 'lines',
+                line: {color: 'red', width: 2, dash: 'dash'},
+                name: 'PLD piso 2023'
+            });
+            fig.data.push({
+                x: [min, max],
+                y: [684.73, 684.73],
+                mode: 'lines',
+                line: {color: 'green', width: 2, dash: 'dash'},
+                name: 'PLD teto 2023'
+            });
+        }
+
+        // Adicione o traço para VWAP
+        fig.data.push({
+            x: dados_produto['data']['data'],
+            y: dados_produto['data']['VWAP'],
+            mode: 'lines+markers', // Change mode to lines+markers
+            line: {color: 'blue', width: 2}, // Adjust color and width if needed
+            name: 'VWAP'
+        });
+        console.log("fig below");
+        console.log(fig.data);
+
+        // Criar o gráfico
+        Plotly.newPlot('chart', fig.data, fig.layout);
+        console.log("Gráfico para " + produto_selecionado + " finalizado.");
+    }
+
+    function init(dados_produto, produto_selecionado) {
+        console.log(dados_produto);
+        try {
+            $('#kt_datatable').KTDatatable().destroy();
+            $('#kt_datatable2').KTDatatable().destroy();
+        } catch {}
+        $('#card1').show();
+        $('#card2').show();
+        $('#cardChart').show();
+        KTDatatableRemoteAjaxDemo.init();
+        KTDatatableRemoteAjaxDemo2.init();
+
+        
+        generateChart(dados_produto, produto_selecionado);
+        hideLoadingModal();
+
+    }
+
+
+    // produto on change
+    $('#produtos-dropdown').on('change', function() {
+        var produto_selecionado = document.getElementById('produtos-dropdown').value;
+        showLoadingModal('Obtendo dados do produto ' + produto_selecionado);
+        $.post("/_obter_precos", {visualizacao: 'Produto Individual', produto: produto_selecionado})
+            .done(function (data) {
+                var dados = JSON.parse(data);
+                precos = dados.preco;
+                produtos = dados.produtos;
+
+                console.log(precos);
+                console.log(produtos);
+
+                
+                dados_produto = [];
+
+                // Iterate over the keys of the object
+                for (var key in precos) {
+                    // Check if the current object's 'produto' attribute matches the selected product
+                    if (precos[key].produto === produto_selecionado) {
+                        // If it matches, add the object to the filtered array
+                        dados_produto.push(precos[key]);
+                    }
+                }
+
+                init(dados_produto, produto_selecionado);
+                
+            });
+        
+    });
+
+
+
+</script>
+{% endblock %}

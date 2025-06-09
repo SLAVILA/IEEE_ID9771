@@ -1,0 +1,35 @@
+Instruções de instalação do sistema URCA.
+
+Dependências:
+
+ - Python 3.x 
+ - Cliente do Postgresql ( versão > 12 )
+ 
+ - PARA FREEBSD:
+ - pkg install swig libxslt
+
+  - PARA AMAZON LINUX:
+ -  yum install python3 python3-devel git nginx postgresql-server postgresql-devel swg gcc libxml2 libxml2-devel gcc-c++
+
+  - PARA UBUNTU:
+ -  apt install python3 python3-devel git nginx postgresql-server-dev-12 swig gcc libxml2 libxml2-devel gcc-c++
+
+ - Executar o download do código no BitBucket (pode ser por git checkout ou Download na interface web)
+ 
+ - Se o banco de dados tiver que ser criado:
+ 
+	- psql -U postgres -c "create database urca encoding 'UTF8' template template0;"
+	- psql -U postgres urca < dumps/dump_urca.sql
+ 
+ - Criar o ambiente virtual no python: python -m venv venv (OBS: se for ubuntu vai precisar instalar o venv apt-get install python3-venv e tem que usar o comando python3 -m venv venv )
+ - Entrar no ambiente virtual: source venv/bin/activate
+ - Instalar as dependências do python: 
+ 
+   pip install --upgrade pip wheel
+   pip install -r requirements.txt
+   
+ - Exportar as variáveis de memória: . ./exports
+ 
+ - Rodar o flask: flask run -h <IP do Computador>
+ 
+ 

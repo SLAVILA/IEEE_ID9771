@@ -1,0 +1,707 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+
+<div class="spinnerr" id="spinner" style="display: flex;">
+            <div></div>
+        </div>
+<!--begin::Entry-->
+<div class="subheader py-2 py-lg-4 subheader-solid d-none" id="kt_subheader">
+    <div class="container-fluid d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap">
+        <h5 class="text-dark font-weight-bold mt-2 mb-2 mr-5">Previsão</h5>
+        <div class="d-flex align-items-center flex-grow-1" id="processosDropdown">
+            <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200"></div>
+
+            <div class="d-flex flex-column flex-md-row align-items-center justify-content-center w-100">
+                <!-- Seletor de M à esquerda -->
+                <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <select class="form-control mr-3" aria-label="Selecione um m" id="mSelecionado">
+                        <option value="M+3">M+3</option>
+                        <option value="M+2">M+2</option>
+                        <option value="M+1">M+1</option>
+                        <option value="M+0">M+0</option>
+                    </select>
+                </div>
+                <!-- Seletor de datas à esquerda -->
+                <div class="d-flex align-items-center mb-3 mb-md-0">
+                    <select class="form-control mr-3" aria-label="Selecione uma data" id="dataSelecionada">
+                        <option value="" disabled selected>Selecione uma data</option>
+                        {% for data in datas %}
+                            {% if not loop.last %}
+                                <option value="{{ data }}">{{ data }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Indicadores de tendência no centro -->
+                <!-- <div class="d-flex justify-content-center mb-3 mb-md-0">
+                    <div class="d-flex align-items-center mr-3">
+                        <div class="color-box bg-dangerr"></div>
+                        <span class="ml-2">Tendência de Baixa</span>
+                    </div>
+                    <div class="d-flex align-items-center mr-3">
+                        <div class="color-box bg-warningg"></div>
+                        <span class="ml-2">Estagnação</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="color-box bg-primaryy"></div>
+                        <span class="ml-2">Tendência de Alta</span>
+                    </div>
+                </div> -->
+
+                <!-- Botão de atualizar à direita -->
+                <!-- <div class="d-flex align-items-center">
+                    <button id="update-charts-btn" class="btn btn-primary ml-3" onclick="atualizar()">Atualizar Gráficos</button>
+                </div> -->
+            </div>
+        </div>
+    </div>
+</div>
+<div class="d-flex flex-column-fluid" id="page" style="display:none;">
+    <!--begin::Container-->
+    <div class="container">
+        <!--begin::Dashboard-->
+        <!--begin::Row-->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-6 text-center">
+                
+                <!-- Início da legenda -->
+                <div class="mt-4">
+                    <div class="d-flex justify-content-center">
+                        <div class="d-flex align-items-center mr-3">
+                            <div class="color-box bg-dangerr"></div>
+                            <span class="ml-2">Tendência de Baixa</span>
+                        </div>
+                        <div class="d-flex align-items-center mr-3">
+                            <div class="color-box bg-warningg"></div>
+                            <span class="ml-2">Estagnação</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="color-box bg-primaryy"></div>
+                            <span class="ml-2">Tendência de Alta</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-6 col-md-6 mb-1 d-flex">
+                <div class="card-custom card-stretch w-100">
+                    <div class="position-relative">
+                        <div id="estocastico-error" class="card h-100 d-none" style="padding: 10px;">
+                            <div class="text-danger error-container">
+                                <div class="error-message">
+                                    <!-- <i class="fas fa-exclamation-triangle"></i> -->
+                                    Não há dados do modelo Estocástico para a data selecionada
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="estocastico" class="hidden border-0"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6 mb-1 d-flex">
+                <div class="card-custom card-stretch w-100">
+                    <div id="markov-error" class="text-danger card h-100 d-none error-container">
+                        <div class="error-message">
+                            <!-- <i class="fas fa-exclamation-triangle"></i> -->
+                            Não há dados do modelo Markov para a data selecionada
+                        </div>
+                    </div>
+                    <div id="markov" class="hidden"></div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6 mb-1 d-flex">
+                <div class="card-custom card-stretch w-100">
+                    <div id="analise-error" class="text-danger card h-100 d-none error-container">
+                        <div class="error-message">
+                            <!-- <i class="fas fa-exclamation-triangle"></i> -->
+                            Não há dados do modelo Análise Técnica para a data selecionada
+                        </div>
+                    </div>
+                    <div id="analise" class="hidden"></div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6 mb-1 d-flex">
+                <div class="card-custom card-stretch w-100">
+                    <div id="rede-error" class="text-danger card h-100 d-none error-container">
+                        <div class="error-message">
+                            <!-- <i class="fas fa-exclamation-triangle"></i> -->
+                            Não há dados do modelo Rede Neural para a data selecionada
+                        </div>
+                    </div>
+                    <div id="rede" class="hidden"></div>
+                </div>
+            </div>
+        </div>
+
+
+        <!--end::Row-->
+        <!--end::Dashboard-->
+    </div>
+    <!--end::Container-->
+</div>
+<!--end::Entry-->
+<div class="modal fade" id="estocasticoModal" tabindex="-1" aria-labelledby="estocasticoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg"  role="document" style="max-width: 65%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="estocasticoModalLabel">Título Teste</h5>
+                <button type="button" class="btn btn-close" data-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" >
+                <div id="estocasticoCarouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                    <ol class="carousel-indicators">
+                        <li data-target="#estocasticoCarouselExampleIndicators" data-slide-to="0" class="active"></li>
+                        <li data-target="#estocasticoCarouselExampleIndicators" data-slide-to="1"></li>
+                        <li data-target="#estocasticoCarouselExampleIndicators" data-slide-to="2"></li>
+                        <li data-target="#estocasticoCarouselExampleIndicators" data-slide-to="3"></li>
+                    </ol>
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img class="d-block w-100" src="img/estocastico/Slide1.PNG" alt="Primeira imagem" >
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/estocastico/Slide2.PNG" alt="Segunda imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/estocastico/Slide3.PNG" alt="Terceira imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/estocastico/Slide4.PNG" alt="Quarta imagem">
+                        </div>
+                    </div>
+                    <a class="carousel-control-prev" href="#estocasticoCarouselExampleIndicators" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#estocasticoCarouselExampleIndicators" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="markovModal" tabindex="-1" aria-labelledby="markovModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document" style="max-width: 65%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="markovModalLabel">Título Teste</h5>
+                <button type="button" class="btn btn-close" data-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="markovCarouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                    <ol class="carousel-indicators">
+                        <li data-target="#markovCarouselExampleIndicators" data-slide-to="0" class="active"></li>
+                        <li data-target="#markovCarouselExampleIndicators" data-slide-to="1"></li>
+                        <li data-target="#markovCarouselExampleIndicators" data-slide-to="2"></li>
+                        <li data-target="#markovCarouselExampleIndicators" data-slide-to="3"></li>
+                        <li data-target="#markovCarouselExampleIndicators" data-slide-to="4"></li>
+                    </ol>
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img class="d-block w-100" src="img/markov/Slide1.PNG" alt="Primeira imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/markov/Slide2.PNG" alt="Segunda imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/markov/Slide3.PNG" alt="Terceira imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/markov/Slide4.PNG" alt="Quarta imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/markov/Slide5.PNG" alt="Quinta imagem">
+                        </div>
+                    </div>
+                    <a class="carousel-control-prev" href="#markovCarouselExampleIndicators" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#markovCarouselExampleIndicators" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="analiseModal" tabindex="-1" aria-labelledby="analiseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document" style="max-width: 65%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="analiseModalLabel">Título Teste</h5>
+                <button type="button" class="btn btn-close" data-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="analiseCarouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                    <ol class="carousel-indicators">
+                        <li data-target="#analiseCarouselExampleIndicators" data-slide-to="0" class="active"></li>
+                        <li data-target="#analiseCarouselExampleIndicators" data-slide-to="1"></li>
+                        <li data-target="#analiseCarouselExampleIndicators" data-slide-to="2"></li>
+                        <li data-target="#analiseCarouselExampleIndicators" data-slide-to="3"></li>
+                        <li data-target="#analiseCarouselExampleIndicators" data-slide-to="4"></li>
+                    </ol>
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img class="d-block w-100" src="img/analise_tecnica/Slide1.PNG" alt="Primeira imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/analise_tecnica/Slide2.PNG" alt="Segunda imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/analise_tecnica/Slide3.PNG" alt="Terceira imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/analise_tecnica/Slide4.PNG" alt="Quarta imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/analise_tecnica/Slide5.PNG" alt="Quinta imagem">
+                        </div>
+                    </div>
+                    <a class="carousel-control-prev" href="#analiseCarouselExampleIndicators" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#analiseCarouselExampleIndicators" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="redesModal" tabindex="-1" aria-labelledby="redesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document" style="max-width: 65%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="redesModalLabel">Título Teste</h5>
+                <button type="button" class="btn btn-close" data-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="redesCarouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                    <ol class="carousel-indicators">
+                        <li data-target="#redesCarouselExampleIndicators" data-slide-to="0" class="active"></li>
+                        <li data-target="#redesCarouselExampleIndicators" data-slide-to="1"></li>
+                        <li data-target="#redesCarouselExampleIndicators" data-slide-to="2"></li>
+                        <li data-target="#redesCarouselExampleIndicators" data-slide-to="3"></li>
+                        <li data-target="#redesCarouselExampleIndicators" data-slide-to="4"></li>
+                        <li data-target="#redesCarouselExampleIndicators" data-slide-to="5"></li>
+                    </ol>
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img class="d-block w-100" src="img/redes_neurais/Slide1.PNG" alt="Primeira imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/redes_neurais/Slide2.PNG" alt="Segunda imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/redes_neurais/Slide3.PNG" alt="Terceira imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/redes_neurais/Slide4.PNG" alt="Quarta imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/redes_neurais/Slide5.PNG" alt="Quinta imagem">
+                        </div>
+                        <div class="carousel-item">
+                            <img class="d-block w-100" src="img/redes_neurais/Slide6.PNG" alt="Sexta imagem">
+                        </div>
+                    </div>
+                    <a class="carousel-control-prev" href="#redesCarouselExampleIndicators" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#redesCarouselExampleIndicators" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block footer %}
+<script src="assets/js/plotly-2.32.0.min.js" charset="utf-8"></script>
+<script>
+    
+    $('#dataSelecionada').select2({
+            placeholder: 'Escolha uma data',
+            allowClear: true,  // Permite limpar a seleção
+            width: '100%',  // Faz com que o Select2 ocupe a largura completa
+            language: {
+                    noResults: function() {
+                        return "Nenhuma data encontrada"; // Customize your message here
+                    }
+                }
+        });
+
+    function atualizar() {
+        // Show spinner and hide the page
+        document.getElementById('spinner').style.display = 'flex';
+        document.getElementById('page').style.display = 'none';
+
+        
+            $(`#estocastico`).addClass('hidden').removeClass('fade-in');
+            $(`#markov`).addClass('hidden').removeClass('fade-in');
+            $(`#rede`).addClass('hidden').removeClass('fade-in');
+            $(`#analise`).addClass('hidden').removeClass('fade-in');
+
+        Promise.all([
+            obterGraficoEstocastico('estocastico'),
+            obterGraficoMarkov('markov'),
+            obterGraficoAnalise('analise'),
+            obterGraficoRede('rede')
+        ]).then(() => {
+            $(`#estocastico`).addClass('fade-in').removeClass('hidden');
+            $(`#markov`).addClass('fade-in').removeClass('hidden');
+            $(`#rede`).addClass('fade-in').removeClass('hidden');
+            $(`#analise`).addClass('fade-in').removeClass('hidden');
+            document.getElementById('page').style.display = 'block';
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('kt_subheader').classList.remove('d-none');
+        }).catch(() => {
+            // Hide spinner in case of error
+            document.getElementById('spinner').style.display = 'none';
+        });
+    }
+
+    function updatePlotSize(div, div2) {
+        const $div = $(`#${div}`);
+        let viewportHeight = $div.height() / 2;
+        const viewportWidth = $div.width();
+
+        if (viewportHeight < 300) {
+            viewportHeight = document.getElementById(div2).offsetHeight - 20;
+            if (viewportHeight < 300) {
+                viewportHeight = 300;
+            }
+        }
+
+        console.log(div + ' Plot height:', viewportHeight);
+        console.log(div + ' Plot width:', viewportWidth);
+
+        // Update the layout with new size
+        Plotly.relayout(div, {
+            height: viewportHeight,
+            width: viewportWidth
+        });
+    }
+
+    function obterGraficoEstocastico(div) {
+        return new Promise((resolve, reject) => {
+            $(`#${div}`).empty();
+            let errorDiv = $(`#${div}-error`);
+            errorDiv.addClass('d-none');
+            // obter a data selecionada
+            var dataSelecionada = $('#dataSelecionada').val();
+            var m = $('#mSelecionado').val();
+            
+            $.post("/_estocastico_dash", {leng_n: 15, make_plot: true, estag: 0.005, data: dataSelecionada, m: m})
+                .done(function(data) {
+                    data = JSON.parse(data);
+                    let data_plot = data.data;
+                    if (data.status == "0") {
+                        var plotData = JSON.parse(data.plot);
+                        console.log(plotData);
+                        var chartId = 'chart_' + div;
+
+                        // Add a container for the chart
+                        $(`#${div}`).append('<div id="' + chartId + '" class="card h-100" style="padding: 10px;"></div>');
+
+                        // Plot the chart using Plotly
+                        Plotly.newPlot(chartId, plotData.data, plotData.layout);
+
+                        // Initial plot size adjustment
+                        updatePlotSize(chartId, div);
+
+                        // Adjust plot size on window resize
+                        $(window).on('resize', function() {
+                            console.log('resize', chartId, div);
+                            updatePlotSize(chartId, div);
+                        });
+
+                        $(`#${chartId}`).append(`
+                            <div class="text-center mt-3">
+                                <small>Prevê os próximos 15 dias iniciando no dia: ${data_plot}</small>
+                                <button type="button" class="btn btn-link" data-toggle="modal" data-target="#estocasticoModal">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                                <small>M: ${m}</small>
+                            </div>
+                        `);
+
+                        // Inicializar os tooltips no novo conteúdo
+                        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'));
+                        tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl);
+                        });
+
+
+                        resolve();
+                    } else {
+                        
+                        // mostrar erro
+                        errorDiv.removeClass('d-none');
+                        resolve();
+                    }
+                })
+                .fail(function() {
+                    alert('Erro ao obter gráfico para o arquivo. Tente novamente.');
+                    reject();
+                });
+        });
+    }
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+});
+
+    function obterGraficoMarkov(div) {
+        return new Promise((resolve, reject) => {
+            $(`#${div}`).empty();
+            let errorDiv = $(`#${div}-error`);
+            errorDiv.addClass('d-none');
+            // obter a data selecionada
+            var dataSelecionada = $('#dataSelecionada').val();
+            var m = $('#mSelecionado').val();
+            
+
+            $.post("/_markov_dash", {pasta: `rolloff suavizado ${m} SE -> VWAP`, data: dataSelecionada, m: m})
+                .done(function(data) {
+                    data = JSON.parse(data);
+                    let data_plot = data.data;
+                    if (data.status == "0") {
+                        var plotData = JSON.parse(data.plot);
+                        console.log(plotData.layout);
+                        var chartId = 'chart_' + div;
+
+                        // Add a container for the chart
+                        $(`#${div}`).append('<div id="' + chartId + '" class="card h-100" style="padding: 10px;"></div>');
+
+                        // Plot the chart using Plotly
+                        Plotly.newPlot(chartId, plotData.data, plotData.layout);
+
+                        // Initial plot size adjustment
+                        updatePlotSize(chartId, div);
+
+                        // Adjust plot size on window resize
+                        $(window).on('resize', function() {
+                            updatePlotSize(chartId, div);
+                        });
+
+                        // Adicionar um label abaixo do chart com a data do plot
+                        $(`#${chartId}`).append(`
+                            <div class="text-center mt-3">
+                                <small>Prevê os próximos 15 dias iniciando no dia: ${data_plot}</small>
+                                <button type="button" class="btn btn-link" data-toggle="modal" data-target="#markovModal">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                                <small>M: ${m}</small>
+                            </div>
+                        `);
+
+                        // Inicializar os tooltips no novo conteúdo
+                        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'));
+                        tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl);
+                        });
+                        resolve();
+                    } else {
+                        
+                        // mostrar erro
+                        errorDiv.removeClass('d-none');
+                        resolve();
+                    }
+                })
+                .fail(function() {
+                    alert('Erro ao obter gráfico para o arquivo. Tente novamente.');
+                    reject();
+                });
+        });
+    }
+
+    function obterGraficoRede(div) {
+        return new Promise((resolve, reject) => {
+            $(`#${div}`).empty();
+            let errorDiv = $(`#${div}-error`);
+            errorDiv.addClass('d-none');
+            // obter a data selecionada
+            var dataSelecionada = $('#dataSelecionada').val();
+
+            var m = $('#mSelecionado').val();
+            
+
+            $.post("/_rede_neural_dash", {data: dataSelecionada, m: m})
+                .done(function(data) {
+                    data = JSON.parse(data);
+                    let data_plot = data.data;
+                    if (data.status == "0") {
+                        var plotData = JSON.parse(data.plot2);
+                        console.log(plotData.layout);
+                        var chartId = 'chart_' + div;
+
+                        // Add a container for the chart
+                        $(`#${div}`).append('<div id="' + chartId + '" class="card h-100" style="padding: 10px;"></div>');
+
+                        // Plot the chart using Plotly
+                        Plotly.newPlot(chartId, plotData.data, plotData.layout);
+
+                        // Initial plot size adjustment
+                        updatePlotSize(chartId, div);
+
+                        // Adjust plot size on window resize
+                        $(window).on('resize', function() {
+                            updatePlotSize(chartId, div);
+                        });
+
+                        // Adicionar um label abaixo do chart com a data do plot
+                        $(`#${chartId}`).append(`
+                            <div class="text-center mt-3">
+                                <small>Prevê os próximos 15 dias iniciando no dia: ${data_plot}</small>
+                                <button type="button" class="btn btn-link" data-toggle="modal" data-target="#redesModal">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                                <small>M: ${m}</small>
+                            </div>
+                        `);
+
+                        // Exemplo de atualização do modal com novas informações
+                        //const newContent = '<p>Teste.</p>';
+                        //updateModalContent(newContent, 'Título Teste');
+
+
+                        // Inicializar os tooltips no novo conteúdo
+                        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'));
+                        tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl);
+                        });
+
+
+                        resolve();
+                    } else {
+                        
+                        // mostrar erro
+                        errorDiv.removeClass('d-none');
+                        resolve();
+                    }
+                })
+                .fail(function() {
+                    alert('Erro ao obter gráfico para o arquivo. Tente novamente.');
+                    reject();
+                });
+        });
+    }
+
+    function obterGraficoAnalise(div) {
+        return new Promise((resolve, reject) => {
+            $(`#${div}`).empty();
+            let errorDiv = $(`#${div}-error`);
+            errorDiv.addClass('d-none');
+            // obter a data selecionada
+            var dataSelecionada = $('#dataSelecionada').val();
+
+            var m = $('#mSelecionado').val();
+            
+            $.post("/_analise_dash", {data: dataSelecionada, m: m})
+                .done(function(data) {
+                    data = JSON.parse(data);
+                    let data_plot = data.data;
+                    if (data.status == "0") {
+                        var plotData = JSON.parse(data.plot);
+                        console.log(plotData.layout);
+                        var chartId = 'chart_' + div;
+
+                        // Add a container for the chart
+                        $(`#${div}`).append('<div id="' + chartId + '" class="card h-100" style="padding: 10px;"></div>');
+
+                        // Plot the chart using Plotly
+                        Plotly.newPlot(chartId, plotData.data, plotData.layout);
+
+                        // Initial plot size adjustment
+                        updatePlotSize(chartId, div);
+
+                        // Adjust plot size on window resize
+                        $(window).on('resize', function() {
+                            console.log('resize', chartId);
+                            updatePlotSize(chartId, div);
+                        });
+                        // Adicionar um label abaixo do chart com a data do plot
+                        $(`#${chartId}`).append(`
+                            <div class="text-center mt-3">
+                                <small>Gráfico utilizando os ultimos 30 dias antes de: ${data_plot}</small>
+                                <button type="button" class="btn btn-link" data-toggle="modal" data-target="#analiseModal">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                                <small>M: ${m}</small>
+                            </div>
+                        `);
+
+                        // Inicializar os tooltips no novo conteúdo
+                        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'));
+                        tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl);
+                        });
+
+                        resolve();
+                    } else {
+                        
+                        // mostrar erro
+                        errorDiv.removeClass('d-none');
+                        resolve();
+                    }
+                })
+                .fail(function() {
+                    alert('Erro ao obter gráfico para o arquivo. Tente novamente.');
+                    reject();
+                });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#dataSelecionada').on('change', function() {
+            atualizar();
+        });
+        $('#mSelecionado').on('change', function() {
+            atualizar();
+        });
+    });
+
+    atualizar();
+</script>
+{% endblock %}

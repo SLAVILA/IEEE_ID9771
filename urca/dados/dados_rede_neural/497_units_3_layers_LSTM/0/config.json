@@ -1,0 +1,1 @@
+{"out_steps": 15, "output_features": 18, "layers": 3, "units": 497, "noise": 0.13929347038261625, "dropout": 0.0, "batch_size": 32, "loss": "AdjMSEFuzzy", "loss_criteria": "min", "patience": 100, "epochs": 10000, "kwargs": {"inp_steps": 60, "layer_type": "LSTM", "prop": true, "diff": false, "masked": true, "input_features": 18}}

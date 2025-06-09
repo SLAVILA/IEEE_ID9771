@@ -1,0 +1,377 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+<br>
+<!--begin::Entry-->
+<div class="d-flex flex-column-fluid">
+    <!--begin::Container-->
+    <div class="container">
+        <!--begin::Dashboard-->
+        <!--begin::Row-->
+        <div class="row">
+            <div class="col-lg-12 col-xxl-12 order-1 order-xxl-12">
+                <!--begin::List Widget 8-->
+                <div class="card card-custom card-stretch gutter-b">
+                    <!--begin::Header-->
+                    <div class="card-header border-0">
+                        <h3 class="card-title font-weight-bolder text-dark">
+                            {% if novo == 1 %}
+                            Novo Usuário
+                            {% else %}
+                            Edição de Usuários
+                            {% endif %}
+                        </h3>
+                    </div>
+                    <!--end::Header-->
+
+                    
+                        <!--begin::Body-->
+                        <div class="card-body pt-0">
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nome <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name='str_nome' id='str_nome'
+                                            value='{{ edita_usuario["str_nome"] }}' placeholder="Nome" />
+
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Email <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" name='str_email' id='str_email'
+                                            value='{{ edita_usuario["str_email"] }}'
+                                            placeholder="email@seusite.com.br" />
+
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Senha <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" name='str_senha' id='str_senha'
+                                            placeholder="***********" />
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Permissão <span class="text-danger">*</span></label>
+                                        <select class="form-control select2" name='fk_id_permissao'
+                                            id='fk_id_permissao'>
+                                            <option value="" >-</option>
+
+                                            {% for i in tipo_permissao %}
+                                            <option value="{{ i['id'] }}" >{{ i["str_nome_perm"] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Cliente <span class="text-danger">*</span></label>
+                                        <select class="form-control select2" name='fk_id_cliente'
+                                            id='fk_id_cliente'>
+                                            <option value="" >-</option>
+
+                                            {% for i in clientes %}
+                                            <option value="{{ i['id'] }}" >{{ i["str_nome"] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-1">
+                                    <div class="form-group">
+
+                                        <label for="bol_status">Status <span class="text-danger">*</span></label>
+                                        <span class="switch switch-outline switch-icon switch-success">
+                                            <label>
+                                                {% if novo == 1 %}
+                                                <input type="checkbox" checked="checked" name="bol_status" id="bol_status" />
+                                                {% else %}
+                                                <input type="checkbox" {% if edita_usuario["bol_status"] %}
+                                                    checked="checked" {% endif %} name="bol_status" id="bol_status" />
+                                                {% endif %}
+                                                <span></span>
+                                            </label>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <div class="form-group">
+
+                                        <label for="bol_status">Admin <span class="text-danger">*</span></label>
+                                        <span class="switch switch-outline switch-icon switch-success">
+                                            <label>
+                                                {% if novo == 1 %}
+                                                <input type="checkbox"  name="bol_admin" id="bol_admin" />
+                                                {% else %}
+                                                <input type="checkbox" {% if edita_usuario["bol_admin"] %}
+                                                    checked="checked" {% endif %} name="bol_admin" id="bol_admin" />
+                                                {% endif %}
+                                                <span></span>
+                                            </label>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+
+                                        <label for="bol_status">Trocou senha? <span class="text-danger">*</span></label>
+                                        <span class="switch switch-outline switch-icon switch-success">
+                                            <label>
+                                                {% if novo == 1 %}
+                                                <input type="checkbox" checked="checked" name="bol_trocou_senha" id="bol_trocou_senha" />
+                                                {% else %}
+                                                <input type="checkbox" {% if edita_usuario["bol_trocou_senha"] %}
+                                                    checked="checked" {% endif %} name="bol_trocou_senha" id="bol_trocou_senha" />
+                                                {% endif %}
+                                                <span></span>
+                                            </label>
+                                        </span>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>SETOR<span class="text-danger">*</span></label>
+                                        <select multiple="" class="form-control" name='fk_id_setor' id='fk_id_setor'>
+                                            <option value="0" {% if setores_usuario|count == 0 %} selected {% endif %}>TODOS</option>
+                                            {% for setor in setores %}
+                                            <option value="{{setor.id}}" {% if setor.id in setores_usuario %} selected {% endif %}>{{setor.str_setor}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <div class="form-group">
+                                        <label>Urna</label>
+                                        {% if novo == 1 %}
+                                        <input type="number" class="form-control" 
+                                            name='int_urna' id='int_urna'
+                                            value='0' />
+                                        {% else %}
+                                        <input type="number" class="form-control" 
+                                            name='int_urna' id='int_urna'
+                                            value='{{ edita_usuario["int_urna"] }}' />
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                {% if not config_cliente['nomenclatura_usuario_tag1'] == '' %}
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>{{ config_cliente['nomenclatura_usuario_tag1'] }}</label>
+                                            <input type="text" class="form-control" 
+                                                name='usuario_tag1' id='usuario_tag1'
+                                                value='{{ edita_usuario["usuario_tag1"] }}' />
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                {% if not config_cliente['nomenclatura_usuario_tag2'] == '' %}
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>{{ config_cliente['nomenclatura_usuario_tag2'] }}</label>
+                                        <input type="text" class="form-control" 
+                                            name='usuario_tag2' id='usuario_tag2'
+                                            value='{{ edita_usuario["usuario_tag2"] }}' />
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if not config_cliente['nomenclatura_usuario_tag3'] == '' %}
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>{{ config_cliente['nomenclatura_usuario_tag3'] }}</label>
+                                        <input type="text" class="form-control" 
+                                            name='usuario_tag3' id='usuario_tag3'
+                                            value='{{ edita_usuario["usuario_tag3"] }}' />
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if not config_cliente['nomenclatura_usuario_tag4'] == '' %}
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>{{ config_cliente['nomenclatura_usuario_tag4'] }}</label>
+                                        <input type="text" class="form-control" 
+                                            name='usuario_tag4' id='usuario_tag4'
+                                            value='{{ edita_usuario["usuario_tag4"] }}' />
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                            <!--end::Body-->
+
+                            <div class="card-footer">
+                                {% if novo == 1 %}
+                                <button type="submit" id="alterar"
+                                    class="btn btn-primary mr-2">Incluir</button>
+                                <input type="hidden" name="op" id='op' value="incluir">
+                                {% else %}
+                                <button type="submit" id="alterar"
+                                    class="btn btn-primary mr-2">Alterar</button>
+                                <input type="hidden" name="op" id='op' value="alterar">
+                                {% endif %}
+                                <button type="button" id='voltar' class="btn btn-secondary">Voltar</button>
+                            </div>
+                    
+                </div>
+                <!--end: Card-->
+                <!--end::List Widget 8-->
+            </div>
+        </div>
+        <!--end::Row-->
+        <!--end::Dashboard-->
+    </div>
+    <!--end::Container-->
+</div>
+<!--end::Entry-->
+
+{% endblock %}
+
+{% block footer %}
+<script>var KTAppSettings = { "breakpoints": { "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400 }, "colors": { "theme": { "base": { "white": "#ffffff", "primary": "#3699FF", "secondary": "#E5EAEE", "success": "#1BC5BD", "info": "#8950FC", "warning": "#FFA800", "danger": "#F64E60", "light": "#E4E6EF", "dark": "#181C32" }, "light": { "white": "#ffffff", "primary": "#E1F0FF", "secondary": "#EBEDF3", "success": "#C9F7F5", "info": "#EEE5FF", "warning": "#FFF4DE", "danger": "#FFE2E5", "light": "#F3F6F9", "dark": "#D6D6E0" }, "inverse": { "white": "#ffffff", "primary": "#ffffff", "secondary": "#3F4254", "success": "#ffffff", "info": "#ffffff", "warning": "#ffffff", "danger": "#ffffff", "light": "#464E5F", "dark": "#ffffff" } }, "gray": { "gray-100": "#F3F6F9", "gray-200": "#EBEDF3", "gray-300": "#E4E6EF", "gray-400": "#D1D3E0", "gray-500": "#B5B5C3", "gray-600": "#7E8299", "gray-700": "#5E6278", "gray-800": "#3F4254", "gray-900": "#181C32" } }, "font-family": "Poppins" };</script>
+<script>
+ 
+    $('#fk_id_permissao').select2({
+        placeholder: "Selecione uma permissão"
+    });
+
+    $('#fk_id_cliente').select2({
+        placeholder: "Selecione um cliente"
+    });
+
+    $('#fk_id_setor').select2({
+        placeholder: "Selecione um setor"
+    });
+
+    {% if novo != 1 %}
+
+    jQuery(document).ready(function () {
+        $('#fk_id_permissao').val("{{ edita_usuario['id_perm'] }}").change();
+    });
+
+    jQuery(document).ready(function () {
+        $('#fk_id_cliente').val("{{ edita_usuario['id_cliente'] }}").change();
+    });
+
+    {% endif %}
+
+    $(document).ready(function(){
+            $("#voltar").on('click', function(){
+                window.location.href = "/usuarios_lista";
+            });
+    });
+
+    $(document).ready(function(){
+            $("#alterar").on('click', function(){
+
+                var data = new FormData();
+
+                if( document.getElementById('bol_status').checked ) {
+                    data.append('bol_status', '1');
+                }else{
+                    data.append('bol_status', '0');
+                }
+                if( document.getElementById('bol_admin').checked ) {
+                    data.append('bol_admin', '1');
+                }else{
+                    data.append('bol_admin', '0');
+                }
+                if( document.getElementById('bol_trocou_senha').checked ) {
+                    data.append('bol_trocou_senha', '1');
+                }else{
+                    data.append('bol_trocou_senha', '0');
+                }
+                data.append('str_nome', $('#str_nome').val());
+                data.append('str_login', $('#str_login').val());
+                data.append('str_email', $('#str_email').val());
+                data.append('str_senha', $('#str_senha').val());
+                data.append('int_urna', $('#int_urna').val());
+                data.append('fk_id_permissao', $('#fk_id_permissao').val());
+                data.append('fk_id_setor', $('#fk_id_setor').val());
+                data.append('fk_id_cliente', $('#fk_id_cliente').val());
+                {% if not config_cliente['nomenclatura_usuario_tag1'] == '' %}
+                    data.append('usuario_tag1', $('#usuario_tag1').val());
+                {% else %}
+                    data.append('usuario_tag1', '');
+                {% endif %}
+                {% if not config_cliente['nomenclatura_usuario_tag2'] == '' %}
+                    data.append('usuario_tag2', $('#usuario_tag2').val());
+                {% else %}
+                    data.append('usuario_tag2', '');
+                {% endif %}
+                {% if not config_cliente['nomenclatura_usuario_tag3'] == '' %}
+                    data.append('usuario_tag3', $('#usuario_tag3').val());
+                {% else %}
+                    data.append('usuario_tag3', '');
+                {% endif %}
+                {% if not config_cliente['nomenclatura_usuario_tag4'] == '' %}
+                    data.append('usuario_tag4', $('#usuario_tag4').val());
+                {% else %}
+                    data.append('usuario_tag4', '');
+                {% endif %}
+                $.ajax({
+                    {% if novo == 1 %}
+                        url: '/_usuarios_novo',
+                    {% else %}
+                        url: '/_usuarios_edicao',
+                    {% endif %}
+                    data: data,
+                    processData: false,
+                    contentType: false,
+                    type: 'POST',
+                    success: function(data) 
+                    {
+                    var res = JSON.parse(data);
+                    // alert(res.msg);
+                      if (res.status == '1') {
+                            Swal.fire({
+                            text: res.msg,
+                            icon: "info",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok!",
+                            customClass: {
+                                confirmButton: "btn font-weight-bold btn-light-primary"
+                            }
+                        }).then(function () {
+
+                            KTUtil.scrollTop();
+                            // window.location.href = "/lista_usuarios";
+
+                        });
+
+                      } else {
+                            Swal.fire({
+                            text: res.msg,
+                            icon: "info",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok!",
+                            customClass: {
+                                confirmButton: "btn font-weight-bold btn-light-primary"
+                            }
+                        }).then(function () {
+
+                            window.location.href = "/usuarios_lista";
+                            // window.location.href = "/lista_usuarios";
+
+                        });
+                      }
+                    }
+                });
+
+            });
+        });
+</script>
+
+{% endblock %}

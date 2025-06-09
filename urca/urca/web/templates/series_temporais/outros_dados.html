@@ -1,0 +1,280 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+
+<div class="subheader py-2 py-lg-4 subheader-solid" id="kt_subheader">
+    <div class="container-fluid d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap">
+        <!--begin::Info-->
+        <div class="d-flex align-items-center flex-wrap mr-2" id="produtosDropdown">
+            <!--begin::Page Title-->
+            <h5 class="text-dark font-weight-bold mt-2 mb-2 mr-5">Visualização de dados históricos</h5>
+            <!--end::Page Title-->
+            <!--begin::Actions-->
+            <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200"></div>
+            <div class="col-auto">
+                <select name="grafico" id="grafico-dropdown" class="form-control">
+                    <option value="">Selecione um gráfico</option>
+                    <option value="ONIm">ONIm</option>
+                    <option value="TNA">TNA</option>
+                    <option value="Proj_C">Projeção de Carga</option>
+                    <option value="CMO">CMO</option>
+                    <option value="EARm">EARm</option>
+                    <option value="Clim">Climatologia</option>
+                    <option value="IPCA">IPCA</option>
+                    <option value="Preços BBCE">Preços BBCE</option>
+                    <option value="Teto e Piso PLD">Teto e Piso PLD</option>
+                    <option value="ENA prevista CFSV2">ENA prevista CFSV2</option>
+                </select>
+            </div>
+            <div class="col-auto" id="dropdown-date-selector" style="display:none;">
+                <select id="data-dropdown" class="form-control">
+                    <option value="">Selecione uma data</option>
+                </select>
+            </div>
+             <div class="col-auto" id="rees-selector" style="display:none;">
+                <select id="rees-dropdown" class="form-control">
+                    <option value="">Selecione um REES</option>
+                </select>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<br>
+
+<!--begin::Entry-->
+<div class="d-flex flex-column-fluid">
+    <div class="container">
+        <div class="row">
+            <!-- Placeholder para o gráfico -->
+            <div class="col-lg-12 col-xxl-12 order-1 order-xxl-12 mb-5">
+                <div class="card card-custom" id="cardChart" style="display: none;">
+                    <div class="card-body">
+                        <div id="chart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--end::Entry-->
+
+<!-- Modal de carregamento -->
+<div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Aguarde...</span>
+                </div>
+                <p id="loadingText">Carregando dados...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block footer %}
+<script src="js/waitingfor.js"></script>
+<script src="assets/js/plotly-2.32.0.min.js" charset="utf-8"></script>
+
+<script>
+    const graficoDropdown = document.getElementById('grafico-dropdown');
+    const cardChart = document.getElementById('cardChart');
+    const chartDiv = document.getElementById('chart');
+
+    // Função para exibir o modal de carregamento
+    function showLoadingModal(text) {
+        document.getElementById('loadingText').textContent = text;
+        $('#loadingModal').modal('show');
+    }
+
+    // Função para ocultar o modal de carregamento
+    function hideLoadingModal() {
+        $('#loadingModal').modal('hide');
+    }
+
+    // Carregar o gráfico quando o usuário selecionar uma opção
+    graficoDropdown.addEventListener('change', function() {
+        const graficoSelecionado = this.value;
+        if (!graficoSelecionado) {
+            cardChart.style.display = 'none';
+            return;
+        }
+        const dateDropdownContainer = document.getElementById('dropdown-date-selector');
+        const dataDropdown = document.getElementById('data-dropdown');
+        const reesContainer = document.getElementById('rees-selector');
+        const reesDropdown = document.getElementById('rees-dropdown');
+
+        if (graficoSelecionado === 'ENA prevista CFSV2') {
+            showLoadingModal('Carregando datas para ' + graficoSelecionado + '...');
+
+            let formData = new FormData();
+            formData.append('grafico', graficoSelecionado);
+
+            // Fazer a requisição POST para obter as datas
+            fetch('_obter_datas', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Limpar o dropdown de datas
+                dataDropdown.innerHTML = '<option value="">Selecione uma data</option>';
+                // Mostrar o dropdown de datas
+                dateDropdownContainer.style.display = 'block';
+
+                // Limpar o dropdown de REES
+                reesDropdown.innerHTML = '<option value="">Selecione um REES</option>';
+                // Mostrar o dropdown de REES
+                reesContainer.style.display = 'block';
+
+                setTimeout(function() {
+                    hideLoadingModal();
+                }, 1000); // Tempo simulado de carregamento
+                // Popular o dropdown de datas com os valores obtidos da API
+                if (data.datas && data.datas.length > 0) {
+                    data.datas.forEach(function(dataItem) {
+                        const option = document.createElement('option');
+                        option.value = dataItem;
+                        option.text = dataItem;
+                        dataDropdown.appendChild(option);
+                    });
+
+                    data.rees.forEach(function(reesItem) {
+                        const option = document.createElement('option');
+                        option.value = reesItem;
+                        option.text = reesItem;
+                        reesDropdown.appendChild(option);
+                    });
+
+                    
+                } else {
+                    // Caso não existam datas disponíveis
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.text = 'Nenhuma data disponível';
+                    dataDropdown.appendChild(option);
+                }
+            })
+            .catch(error => console.error('Erro ao obter as datas:', error));
+            
+        } else {
+            // Exibir o modal de carregamento
+            showLoadingModal('Carregando o gráfico ' + graficoSelecionado + '...');
+            // Esconder o dropdown de datas se não for ENA prevista
+            dateDropdownContainer.style.display = 'none';
+            reesContainer.style.display = 'none';
+            carregarGrafico(graficoSelecionado);
+        }
+
+        
+    });
+
+    function loadPlot(plot, chartDiv) {
+        Plotly.purge(chartDiv);
+        plot = JSON.parse(plot);
+            console.log(plot);
+        Plotly.newPlot(chartDiv, plot.data, plot.layout);
+    }
+
+    // Função para carregar o gráfico selecionado
+    function carregarGrafico(grafico) {
+        cardChart.style.display = 'block';
+        
+        
+
+        let formData = new FormData();
+        var dataSelecionada = document.getElementById('data-dropdown').value;
+        formData.append('grafico', grafico);
+        formData.append('data', dataSelecionada);
+        formData.append('rees', document.getElementById('rees-dropdown').value);
+        if (grafico !== 'ENA prevista CFSV2') {
+            // Fazer a requisição POST para obter as datas
+            fetch('_gerar_grafico', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Limpar gráfico anterior
+                loadPlot(data.plot, chartDiv);
+                setTimeout(function() {
+                    hideLoadingModal();
+                }, 1000); // Tempo simulado de carregamento
+            })
+            .catch(error => console.error('Erro ao obter as datas:', error));
+
+        }
+    }
+    const dataDropdown = document.getElementById('data-dropdown');
+    const reesDropdown = document.getElementById('rees-dropdown');
+    dataDropdown.addEventListener('change', function() {
+        const dataSelecionada = this.value;
+        const graficoSelecionado = document.getElementById('grafico-dropdown').value;
+        const reesSelecionado = document.getElementById('rees-dropdown').value;
+        if (!reesSelecionado) {
+            alert('Selecione um REES');
+            return;
+        }
+
+        // Exibir o modal de carregamento
+        showLoadingModal('Carregando o gráfico ' + graficoSelecionado + ' para a data ' + dataSelecionada + '...');
+
+        let formData = new FormData();
+        formData.append('grafico', graficoSelecionado);
+        formData.append('data', dataSelecionada);
+        formData.append('rees', reesSelecionado);
+
+        // Fazer a requisição POST para obter as datas
+        fetch('_gerar_grafico', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            cardChart.style.display = 'block';
+            loadPlot(data.plot, chartDiv);
+            setTimeout(function() {
+                hideLoadingModal();
+            }, 1000); // Tempo simulado de carregamento
+        })
+        .catch(error => console.error('Erro ao obter as datas:', error));
+    });
+
+    reesDropdown.addEventListener('change', function() {
+        const graficoSelecionado = document.getElementById('grafico-dropdown').value;
+        const dataSelecionada = document.getElementById('data-dropdown').value;
+        if (!dataSelecionada) {
+            alert('Selecione uma data');
+            return;
+        }
+
+        // Exibir o modal de carregamento
+        showLoadingModal('Carregando o gráfico ' + graficoSelecionado + ' para a data ' + dataSelecionada + '...');
+
+        let formData = new FormData();
+        formData.append('grafico', graficoSelecionado);
+        formData.append('data', dataSelecionada);
+        formData.append('rees', this.value);
+
+        // Fazer a requisição POST para obter as datas
+        fetch('_gerar_grafico', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            cardChart.style.display = 'block';
+            loadPlot(data.plot, chartDiv);
+            setTimeout(function() {
+                hideLoadingModal();
+            }, 1000); // Tempo simulado de carregamento
+        })
+        .catch(error => console.error('Erro ao obter as datas:', error));
+    });
+</script>
+
+{% endblock %}

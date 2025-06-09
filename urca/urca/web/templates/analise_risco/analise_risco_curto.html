@@ -1,0 +1,252 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<div class="subheader py-2 py-lg-4 subheader-solid" id="kt_subheader">
+    <div class="container-fluid d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap">
+        <!-- Título e Dropdowns -->
+        <div class="d-flex align-items-center flex-grow-1" id="produtosDropdown">
+            <h5 class="text-dark font-weight-bold mt-2 mb-2 mr-5">Análise de Risco (Curto Prazo)</h5>
+            <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200"></div>
+            {% if array_arquivos %}
+                <div class="d-flex align-items-center">
+                    <select name="m" id="m-dropdown" class="form-control mr-4 select2">
+                        <option value="M+3">M+3</option>
+                        <option value="M+2">M+2</option>
+                        <option value="M+1">M+1</option>
+                        <option value="M+0">M+0</option>
+                    </select>
+                </div>
+                <div class="d-flex align-items-center">
+                    <!-- <label for="saida-dropdown" class="col-form-label mr-2">Escolha uma data:</label> -->
+                    <select name="produtos" id="saida-dropdown" class="form-control mr-4 select2">
+                        {% for i in array_arquivos %}
+                            <option value="{{ i }}">{{ i.replace('_', '/') }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% else %}
+                <label class="text-center mr-4 mt-2">Nenhum gráfico gerado ainda.</label>
+            {% endif %}
+
+
+        </div>
+        
+        <!-- <div class="subheader-separator subheader-separator-ver mt-2 mb-2 mr-4 bg-gray-200"></div> -->
+        <!-- Botão para abrir o modal -->
+        <!-- <div class="d-flex align-items-center justify-content-end flex-grow-0">
+            <button class="btn btn-primary" style="display: none;" data-toggle="modal" data-target="#timeSelectionModal">Gerar (~50 minutos)</button>
+        </div> -->
+    </div>
+</div>
+
+<div class="d-flex flex-column-fluid">
+    <div class="container mt-5">
+
+        <div id="charts">
+            {% if not array_arquivos %}
+            <div class="text-center d-flex justify-content-center align-items-center" style="height: 400px;">
+                <div>
+                    <h3 class="text-muted">Não há nenhum gráfico para ser visualizado.</h3>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="timeSelectionModal" tabindex="-1" role="dialog" aria-labelledby="timeSelectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="timeSelectionModalLabel">Escolha o Tempo</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="time-dropdown" class="col-form-label">Selecione o tempo para gerar:</label>
+                <select name="time" id="time-dropdown" class="form-control">
+                    <option value="5">5 dias</option>
+                    <option value="10">10 dias</option>
+                    <option value="15">15 dias</option>
+                    <option value="60">60 dias</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="start">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Aguarde...</span>
+                </div>
+                <p id="loadingText"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showLoadingModal(text) {
+    $('#loadingText').text(text);
+    $('#loadingModal').modal('show');
+}
+
+function hideLoadingModal() {
+    setTimeout(function() {
+        $('#loadingModal').modal('hide');
+    }, 500);
+}
+</script>
+{% endblock %}
+
+{% block footer %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+<script src="js/waitingfor.js"></script>
+<script src="assets/js/plotly-2.32.0.min.js" charset="utf-8"></script>
+<script>
+var KTAppSettings = {
+    "breakpoints": {
+        "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400
+    },
+    "colors": {
+        "theme": {
+            "base": {
+                "white": "#3699FF", "primary": "#3699FF", "secondary": "#E5EAEE",
+                "success": "#1BC5BD", "info": "#8950FC", "warning": "#FFA800",
+                "danger": "#F64E60", "light": "#E4E6EF", "dark": "#181C32"
+            },
+            "light": {
+                "white": "#ffffff", "primary": "#E1F0FF", "secondary": "#EBEDF3",
+                "success": "#C9F7F5", "info": "#EEE5FF", "warning": "#FFF4DE",
+                "danger": "#FFE2E5", "light": "#F3F6F9", "dark": "#D6D6E0"
+            },
+            "inverse": {
+                "white": "#ffffff", "primary": "#ffffff", "secondary": "#3F4254",
+                "success": "#ffffff", "info": "#ffffff", "warning": "#ffffff",
+                "danger": "#ffffff", "light": "#464E5F", "dark": "#ffffff"
+            }
+        },
+        "gray": {
+            "gray-100": "#F3F6F9", "gray-200": "#EBEDF3", "gray-300": "#E4E6EF",
+            "gray-400": "#D1D3E0", "gray-500": "#B5B5C3", "gray-600": "#7E8299",
+            "gray-700": "#5E6278", "gray-800": "#3F4254", "gray-900": "#181C32"
+        }
+    },
+    "font-family": "Poppins"
+};
+
+function resizePlot(id) {
+            var plotCard = document.getElementById(id);
+            var width = plotCard.clientWidth;
+            var height = plotCard.clientHeight;
+
+            // Adjust the plot dimensions
+            var update = {
+                width: width - 20,  // Subtract some padding/margin if necessary
+                height: height - 20
+            };
+
+            Plotly.relayout(id, update);
+        }
+
+    
+
+$('#saida-dropdown').on('change', function() {
+    let iteracao = $('#saida-dropdown option:selected').val();
+    let m = $('#m-dropdown option:selected').val();
+    loadPlot(iteracao, m);
+});
+
+$('#m-dropdown').on('change', function() {
+    let iteracao = $('#saida-dropdown option:selected').val();
+    let m = $('#m-dropdown option:selected').val();
+    loadPlot(iteracao, m);
+});
+
+{% if array_arquivos %}
+let iteracao = $('#saida-dropdown option:selected').val();
+let m = $('#m-dropdown option:selected').val();
+loadPlot(iteracao, m);
+{% endif %}
+
+function loadPlot(iteracao, m) {
+    showLoadingModal('Obtendo gráfico ...');
+    $.post("/_analise_risco_curto_obter", { tipo: iteracao, m: m })
+        .done(function(data) {
+            $('#charts').empty();
+
+            // Parse JSON response
+            var plotData = JSON.parse(JSON.parse(data).plot);
+            console.log(plotData.data);
+            console.log(plotData.layout);
+            var chartId = 'chart_' + "saida";
+
+            // Adicionar um contêiner para o gráfico
+            $('#charts').append('<div id="' + chartId + '" class="card mb-4" style="border-radius: 15px; padding: 10px; height: 600px"></div>');
+
+            $('#charts').append(`
+                <div class="text-center mt-3">
+                    <p>VaR, o risco de 5% de perdas maiores que λt% (resultado), considerando um intervalo de confiança 95%</p>
+                    
+                </div>
+            `);
+
+            // Plotar o gráfico usando Plotly
+            Plotly.newPlot(chartId, plotData.data, plotData.layout);
+            hideLoadingModal();
+            resizePlot(chartId);
+            
+
+        })
+        .fail(function() {
+            hideLoadingModal();
+            alert('Erro ao obter gráfico para o arquivo ' + arquivo + '. Tente novamente.');
+        });
+}
+
+
+$('#start').on('click', function() {
+    let time = $('#time-dropdown option:selected').val();
+    $('timeSelectionModal').modal('hide');
+    $.post("/_estocastico", { leng_n: time })
+        .done(function(data) {
+            data = JSON.parse(data);
+            console.log(data);
+            if (data.status == "1") {
+                toastr.error(data.msg);
+            } else {
+                toastr.success('Gerando gráfico Estocástico. Pode demorar por volta de ~50 minutos!');
+            }
+        })
+        .fail(function() {
+            hideLoadingModal();
+            alert('Erro ao gerar novo gráfico. Tente novamente.');
+        });
+});
+
+$(document).ready(function() {
+        // Inicializa o Select2 no elemento com a classe .select2
+        $('#saida-dropdown').select2({
+            placeholder: 'Escolha uma data',
+            allowClear: true,  // Permite limpar a seleção
+            width: '100%',  // Faz com que o Select2 ocupe a largura completa
+            language: {
+                    noResults: function() {
+                        return "Nenhuma data encontrada"; // Customize your message here
+                    }
+                }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "/menu.html" %}
+
+{% block main %}
+
+
+<br>
+<!--begin::Entry-->
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="card-title font-weight-bold">Firewall</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Firewall Ativo?</label>
+                        <span class="switch switch-outline switch-icon switch-success">
+                            <label>
+                                <input type="checkbox" id="ligado" {% if ativo %} checked {% endif %} onclick="alt_fw();" />
+                                <span></span>
+                            </label>
+                        </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">IP <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="ip" value="{{ip}}">
+                    </div>
+                    <div class="form-group">
+    <label class="font-weight-bold">Exceções:</label>
+    <div class="d-inline">
+        {% for exception in excecoes.split(",") %}
+            <span class="badge badge-primary m-2">{{ exception }}</span>
+        {% endfor %}
+    </div>
+</div>
+
+                </div>
+                <div class="card-footer bg-light">
+                    <button type="submit" class="btn btn-primary btn-block" id="alterar">Liberar IP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!--end::Container-->
+{% endblock %}
+
+{% block footer %}
+<script>var KTAppSettings = { "breakpoints": { "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400 }, "colors": { "theme": { "base": { "white": "#ffffff", "primary": "#3699FF", "secondary": "#E5EAEE", "success": "#1BC5BD", "info": "#8950FC", "warning": "#FFA800", "danger": "#F64E60", "light": "#E4E6EF", "dark": "#181C32" }, "light": { "white": "#ffffff", "primary": "#E1F0FF", "secondary": "#EBEDF3", "success": "#C9F7F5", "info": "#EEE5FF", "warning": "#FFF4DE", "danger": "#FFE2E5", "light": "#F3F6F9", "dark": "#D6D6E0" }, "inverse": { "white": "#ffffff", "primary": "#ffffff", "secondary": "#3F4254", "success": "#ffffff", "info": "#ffffff", "warning": "#ffffff", "danger": "#ffffff", "light": "#464E5F", "dark": "#ffffff" } }, "gray": { "gray-100": "#F3F6F9", "gray-200": "#EBEDF3", "gray-300": "#E4E6EF", "gray-400": "#D1D3E0", "gray-500": "#B5B5C3", "gray-600": "#7E8299", "gray-700": "#5E6278", "gray-800": "#3F4254", "gray-900": "#181C32" } }, "font-family": "Poppins" };</script>
+
+<script>
+
+
+        $(document).ready(function(){
+            $("#alterar").on('click', function(){
+
+                var data = new FormData();
+
+                data.append('ip', $('#ip').val());
+                $.ajax({
+                    url: '/_firewall',
+                    data: data,
+                    processData: false,
+                    contentType: false,
+                    type: 'POST',
+                    success: function(data) 
+                    {
+                    var res = JSON.parse(data);
+                    // alert(res.msg);
+                      if (res.status == '1') {
+                            Swal.fire({
+                            text: res.msg,
+                            icon: "info",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok!",
+                            customClass: {
+                                confirmButton: "btn font-weight-bold btn-light-primary"
+                            }
+                        }).then(function () {
+
+                            KTUtil.scrollTop();
+                            // window.location.href = "/lista_usuarios";
+
+                        });
+
+                      } else {
+
+                           Swal.fire({
+                            text: res.msg,
+                            icon: "info",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok!",
+                            customClass: {
+                                confirmButton: "btn font-weight-bold btn-light-primary"
+                            }
+                        }).then(function () {
+
+                            window.location.href = "/firewall";
+                            // window.location.href = "/lista_usuarios";
+
+                        });
+
+                      }
+                    }
+                });
+
+            });
+        });
+
+        function alt_fw() {
+            //alert(document.getElementById('ligado').checked);
+            if( document.getElementById('ligado').checked ) {
+                var ligado=1;
+            }else{
+                var ligado=0;
+            }
+            $.post("/_firewall_altera", { ligado: ligado })
+                .done(function (data) {
+                    var res = JSON.parse(data);
+                    // alert(res.msg);
+                    if (res.status == '1') {
+
+                        Swal.fire({
+                            text: res.msg,
+                            icon: "info",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok!",
+                            customClass: {
+                                confirmButton: "btn font-weight-bold btn-light-primary"
+                            }
+                        }).then(function () {
+
+                            KTUtil.scrollTop();
+
+                        });
+
+                    } else {
+
+                        toastr.options = {
+                            "closeButton": false,
+                            "debug": false,
+                            "newestOnTop": false,
+                            "progressBar": false,
+                            "positionClass": "toast-top-right",
+                            "preventDuplicates": false,
+                            "onclick": null,
+                            "showDuration": "300",
+                            "hideDuration": "1000",
+                            "timeOut": "5000",
+                            "extendedTimeOut": "1000",
+                            "showEasing": "swing",
+                            "hideEasing": "linear",
+                            "showMethod": "fadeIn",
+                            "hideMethod": "fadeOut"
+                        };
+
+                        toastr.success(res.msg);
+
+                    }
+                    // window.location.href = "/abre_relat";
+                    //window.location.href="/login" ;
+                });
+        };
+
+
+   
+   
+
+</script>
+
+{% endblock %}
