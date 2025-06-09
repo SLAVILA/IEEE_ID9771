@@ -21,7 +21,7 @@ node_modules/
 
 # Package files
 *.pdf
-*.csv
+#*.csv
 
 # Maven
 target/
@@ -42,10 +42,10 @@ importa.sql
 database.py
 
 
-start.sh
+#start.sh
 
-web/static/candidatos/*
-web/static/documentos/*
+#web/static/candidatos/*
+#web/static/documentos/*
 
 # JetBrains IDE
 .idea/
