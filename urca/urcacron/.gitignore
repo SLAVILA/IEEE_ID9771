@@ -26,7 +26,7 @@ node_modules/
 # Maven
 target/
 venv*/
-temp/
+#temp/
 img/
 uploads/
 
