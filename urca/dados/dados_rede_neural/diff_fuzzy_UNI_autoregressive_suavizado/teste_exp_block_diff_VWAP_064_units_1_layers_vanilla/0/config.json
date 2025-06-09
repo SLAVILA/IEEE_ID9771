@@ -1,1 +1,3 @@
-{"out_steps": 15, "output_features": 1, "layers": 1, "units": 64, "noise": 0.1, "dropout": 0, "batch_size": 32, "loss": "AdjMSEFuzzy", "loss_criteria": "min", "patience": 1000, "epochs": 10000, "kwargs": {"inp_steps": 60, "layer_type": "vanilla", "prop": true, "diff": true}}
+version https://git-lfs.github.com/spec/v1
+oid sha256:01818fec43b957e8388689de0876a82ff920484ed0ebeedcefd422252257b574
+size 275
