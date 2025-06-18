@@ -1,4 +1,0 @@
-
-MSG_ERROS = {}
-
-MSG_SUCESSOS = {}
