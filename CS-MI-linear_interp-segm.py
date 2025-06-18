@@ -9,8 +9,6 @@ This script performs two main analyses on a dataset:
 Data is read from local directories, eliminating the need for external APIs or databases.
 The outputs are heatmaps saved as .png images in their respective output directories.
 
-Author: [Your Name/Your Organization]
-Date: June 18, 2025
 """
 
 # ==============================================================================
